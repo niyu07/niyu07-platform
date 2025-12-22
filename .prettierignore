@@ -1,0 +1,25 @@
+# Prettier が無視するファイル・フォルダ
+
+# 依存関係
+node_modules
+
+# ビルド結果
+.next
+out
+build
+dist
+
+# キャッシュ
+.cache
+
+# ログ
+*.log
+
+# 環境変数
+.env
+.env.*
+
+# その他
+coverage
+.storybook-static
+package-lock.json

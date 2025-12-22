@@ -6,7 +6,19 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "audit": "npm audit --audit-level=moderate",
+    "storybook": "storybook dev -p 6006",
+    "storybook:build": "storybook build",
+    "ci": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
     "next": "16.1.0",

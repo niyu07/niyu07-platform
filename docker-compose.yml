@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # Next.js 開発環境
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: niyu07-platform-dev
+    ports:
+      - "3000:3000"  # Next.js 開発サーバー
+      - "6006:6006"  # Storybook
+    volumes:
+      # ソースコードをマウント(変更がすぐ反映される)
+      - .:/app
+      # node_modules はコンテナ内のものを使う(ローカルを汚さない)
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=true  # ファイル変更の検知を確実にする
+    stdin_open: true  # インタラクティブモード
+    tty: true         # ターミナルを有効化
+    command: npm run dev
+
+  # Storybook 用(必要なときだけ起動)
+  storybook:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: niyu07-platform-storybook
+    ports:
+      - "6006:6006"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    stdin_open: true
+    tty: true
+    command: npm run storybook
+    profiles:
+      - storybook  # docker-compose --profile storybook up で起動

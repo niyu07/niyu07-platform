@@ -1,0 +1,63 @@
+name: CI
+
+# いつ実行するか
+on:
+  # main ブランチに push されたとき
+  push:
+    branches: [main]
+  # プルリクエストが作られたとき
+  pull_request:
+    branches: [main]
+
+# 実行する処理
+jobs:
+  # テストとチェックを実行
+  test:
+    name: テスト・チェック
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. コードを取得
+      - name: コードを取得
+        uses: actions/checkout@v4
+
+      # 2. Node.js をセットアップ
+      - name: Node.js をセットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 3. パッケージをインストール
+      - name: パッケージをインストール
+        run: npm ci
+
+      # 4. コードの見た目をチェック
+      - name: コードの見た目をチェック (Prettier)
+        run: npm run format:check
+
+      # 5. コードのミスをチェック
+      - name: コードのミスをチェック (ESLint)
+        run: npm run lint
+
+      # 6. 型のミスをチェック
+      - name: 型のミスをチェック (TypeScript)
+        run: npm run typecheck
+
+      # 7. テストを実行
+      - name: テストを実行 (Vitest)
+        run: npm run test
+
+      # 8. セキュリティチェック
+      - name: セキュリティチェック (npm audit)
+        run: npm run audit
+        # セキュリティの問題があっても続行する(警告として扱う)
+        continue-on-error: true
+
+      # 9. ビルドできるか確認
+      - name: ビルドできるか確認
+        run: npm run build
+
+      # 10. Storybook をビルド
+      - name: Storybook をビルド
+        run: npm run storybook:build

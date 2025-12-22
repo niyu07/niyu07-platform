@@ -1,0 +1,32 @@
+# Docker イメージに含めないファイル・フォルダ
+
+# 依存関係(コンテナ内で再インストールする)
+node_modules
+npm-debug.log
+
+# ビルド結果
+.next
+out
+build
+dist
+
+# テスト・カバレッジ
+coverage
+.vitest
+
+# Storybook
+storybook-static
+.storybook-static
+
+# Git
+.git
+.gitignore
+
+# 環境変数
+.env
+.env.*
+
+# その他
+.DS_Store
+*.log
+README.md
