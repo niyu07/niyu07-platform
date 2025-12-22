@@ -5,6 +5,8 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   test: {
+    // グローバルに expect などを使えるようにする
+    globals: true,
     // ブラウザ環境を再現する
     environment: 'jsdom',
     // テストのセットアップファイル

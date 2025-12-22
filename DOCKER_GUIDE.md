@@ -8,6 +8,7 @@ Docker を使うと、**ローカルを汚さずに**開発できます!
 ## 🎯 Docker とは?
 
 **例え話:**
+
 - パソコン = 家
 - Docker コンテナ = レンタルルーム
 - レンタルルームで作業すれば、家は汚れない!
@@ -32,6 +33,7 @@ docker-compose run --rm app npm ci
 ```
 
 **何をしているか:**
+
 - `docker-compose run` = コンテナの中でコマンドを実行
 - `--rm` = 実行後にコンテナを削除(ゴミが残らない)
 - `app` = どのコンテナを使うか
@@ -47,11 +49,13 @@ docker-compose up
 ```
 
 **何が起こるか:**
+
 - コンテナが起動する
 - Next.js 開発サーバーが起動する
 - ブラウザで http://localhost:3000 を開くと見れる!
 
 **止め方:**
+
 - `Ctrl + C` を押す
 - または別のターミナルで `docker-compose down`
 
@@ -65,6 +69,7 @@ docker-compose --profile storybook up storybook
 ```
 
 **何が起こるか:**
+
 - Storybook が起動する
 - ブラウザで http://localhost:6006 を開くと見れる!
 
@@ -117,17 +122,17 @@ docker-compose run --rm app npm run ci
 
 ## 🎨 よく使うコマンド一覧
 
-| コマンド | 何をするか |
-|---------|----------|
-| `docker-compose up` | 開発サーバーを起動 |
-| `docker-compose down` | コンテナを停止 |
-| `docker-compose run --rm app npm run test` | テストを実行 |
-| `docker-compose run --rm app npm run lint` | Lint チェック |
-| `docker-compose run --rm app npm run format` | コードを整える |
-| `docker-compose run --rm app npm run typecheck` | 型チェック |
-| `docker-compose run --rm app npm run ci` | すべてのチェック |
-| `docker-compose logs -f` | ログを見る |
-| `docker-compose exec app sh` | コンテナの中に入る |
+| コマンド                                        | 何をするか         |
+| ----------------------------------------------- | ------------------ |
+| `docker-compose up`                             | 開発サーバーを起動 |
+| `docker-compose down`                           | コンテナを停止     |
+| `docker-compose run --rm app npm run test`      | テストを実行       |
+| `docker-compose run --rm app npm run lint`      | Lint チェック      |
+| `docker-compose run --rm app npm run format`    | コードを整える     |
+| `docker-compose run --rm app npm run typecheck` | 型チェック         |
+| `docker-compose run --rm app npm run ci`        | すべてのチェック   |
+| `docker-compose logs -f`                        | ログを見る         |
+| `docker-compose exec app sh`                    | コンテナの中に入る |
 
 ---
 
@@ -136,11 +141,13 @@ docker-compose run --rm app npm run ci
 ### ❌ ポートが使われている
 
 **エラー:**
+
 ```
 Error: Port 3000 is already in use
 ```
 
 **解決方法:**
+
 ```bash
 # 既存のコンテナを停止
 docker-compose down
@@ -154,6 +161,7 @@ lsof -i :3000
 ### ❌ ファイルの変更が反映されない
 
 **解決方法:**
+
 ```bash
 # コンテナを再起動
 docker-compose restart
@@ -164,6 +172,7 @@ docker-compose restart
 ### ❌ パッケージが見つからない
 
 **解決方法:**
+
 ```bash
 # パッケージを再インストール
 docker-compose run --rm app npm ci
@@ -174,6 +183,7 @@ docker-compose run --rm app npm ci
 ### ❌ コンテナが起動しない
 
 **解決方法:**
+
 ```bash
 # すべてのコンテナを停止して削除
 docker-compose down -v

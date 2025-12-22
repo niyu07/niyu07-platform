@@ -5,7 +5,7 @@ import { Button } from './Button';
 
 /**
  * ボタンコンポーネントのテスト
- * 
+ *
  * ボタンが正しく動くかを確認します。
  */
 describe('Button', () => {

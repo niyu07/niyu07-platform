@@ -5,11 +5,13 @@
 このプロジェクトは2つの方法で開発できます:
 
 ### 🐳 方法1: Docker を使う(おすすめ!)
+
 - **メリット**: ローカルを汚さない、環境が統一される
 - **デメリット**: Docker Desktop が必要
 - **詳しくは**: [DOCKER_GUIDE.md](./DOCKER_GUIDE.md) を読んでください
 
 ### 💻 方法2: ローカルで直接開発
+
 - **メリット**: セットアップが簡単
 - **デメリット**: ローカルに node_modules がインストールされる
 - **詳しくは**: このファイルの下を読んでください
@@ -39,21 +41,21 @@ npm install --save-dev \
 
 ### 各パッケージの役割
 
-| パッケージ | 役割 |
-|-----------|------|
-| `prettier` | コードの見た目を自動で揃える |
-| `eslint-config-prettier` | ESLint と Prettier が喧嘩しないようにする |
-| `eslint-plugin-prettier` | Prettier のルールを ESLint で使えるようにする |
-| `vitest` | テストを実行するツール(Jest より速い!) |
-| `@vitest/ui` | テスト結果を見やすく表示する |
-| `@testing-library/react` | React コンポーネントをテストする |
-| `@testing-library/jest-dom` | テストで「表示されているか」などを確認できる |
-| `@testing-library/user-event` | ユーザーの操作(クリックなど)をテストできる |
-| `jsdom` | ブラウザの環境をテストで再現する |
-| `@storybook/nextjs` | Next.js 用の Storybook |
-| `@storybook/addon-essentials` | Storybook の基本機能 |
-| `@storybook/addon-interactions` | Storybook でユーザー操作をテストできる |
-| `@storybook/test` | Storybook でのテストツール |
+| パッケージ                      | 役割                                          |
+| ------------------------------- | --------------------------------------------- |
+| `prettier`                      | コードの見た目を自動で揃える                  |
+| `eslint-config-prettier`        | ESLint と Prettier が喧嘩しないようにする     |
+| `eslint-plugin-prettier`        | Prettier のルールを ESLint で使えるようにする |
+| `vitest`                        | テストを実行するツール(Jest より速い!)        |
+| `@vitest/ui`                    | テスト結果を見やすく表示する                  |
+| `@testing-library/react`        | React コンポーネントをテストする              |
+| `@testing-library/jest-dom`     | テストで「表示されているか」などを確認できる  |
+| `@testing-library/user-event`   | ユーザーの操作(クリックなど)をテストできる    |
+| `jsdom`                         | ブラウザの環境をテストで再現する              |
+| `@storybook/nextjs`             | Next.js 用の Storybook                        |
+| `@storybook/addon-essentials`   | Storybook の基本機能                          |
+| `@storybook/addon-interactions` | Storybook でユーザー操作をテストできる        |
+| `@storybook/test`               | Storybook でのテストツール                    |
 
 ## 🚀 初心者が最初にやる順番
 
@@ -85,16 +87,19 @@ npm install --save-dev \
 ## 🔧 後から強化できるポイント
 
 ### レベル1(慣れてきたら)
+
 - ESLint のルールを追加する
 - Prettier の設定をカスタマイズする
 - テストのカバレッジを測定する
 
 ### レベル2(もっと慣れたら)
+
 - Husky で commit 前に自動チェック
 - lint-staged で変更したファイルだけチェック
 - Renovate で依存関係を自動更新
 
 ### レベル3(上級者向け)
+
 - Visual Regression Testing(見た目の変化を検知)
 - E2E テスト(Playwright など)
 - パフォーマンス測定
