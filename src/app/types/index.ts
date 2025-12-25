@@ -222,3 +222,125 @@ export interface AccountingSettings {
   customIncomeCategories: string[];
   customExpenseCategories: string[];
 }
+
+// カレンダーの型定義
+
+// カレンダービューの種類
+export type CalendarView = '月' | '週' | '日' | 'リスト';
+
+// カレンダーイベントの種別
+export type CalendarEventType =
+  | '授業'
+  | '勤務'
+  | '案件'
+  | '学習'
+  | 'イベント'
+  | '休憩';
+
+// 通知タイミング
+export type NotificationTiming = 5 | 10 | 30 | 60;
+
+// カレンダーイベント
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  date: string; // YYYY-MM-DD
+  startTime: string; // HH:MM
+  endTime: string; // HH:MM
+  type: CalendarEventType;
+  location?: string;
+  memo?: string;
+  tags?: string[];
+  notification?: NotificationTiming; // 開始前の通知（分）
+  recurrence?: {
+    pattern: '毎週' | '隔週';
+    endDate?: string; // YYYY-MM-DD
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 空き時間
+export interface FreeTime {
+  id: string;
+  date: string; // YYYY-MM-DD
+  startTime: string; // HH:MM
+  endTime: string; // HH:MM
+  durationMinutes: number;
+  suggestedUse: '昼休み' | '移動' | '作業' | '休憩';
+  suggestedTasks?: string[]; // タスクIDの配列
+}
+
+// 日次スケジュールサマリー
+export interface DayScheduleSummary {
+  date: string; // YYYY-MM-DD
+  eventCount: number;
+  totalBusyMinutes: number;
+  totalFreeMinutes: number;
+  events: CalendarEvent[];
+  freeTimes: FreeTime[];
+}
+
+// 週次分析
+export interface WeekAnalysis {
+  weekStart: string; // YYYY-MM-DD
+  weekEnd: string; // YYYY-MM-DD
+  dailyBusyMinutes: {
+    date: string;
+    busyMinutes: number;
+  }[];
+  leastBusyDay: string; // 曜日名
+  mostBusyDay: string; // 曜日名
+  totalEvents: number;
+  totalFreeMinutes: number;
+  recommendation: string; // 例: "水曜に深い作業を入れるのがおすすめです"
+}
+
+// カレンダー設定
+export interface CalendarSettings {
+  weekStartsOn: 0 | 1; // 0: 日曜日, 1: 月曜日
+  defaultView: CalendarView;
+  defaultNotification: NotificationTiming;
+  workingHours: {
+    start: string; // HH:MM
+    end: string; // HH:MM
+  };
+  showWeekNumbers: boolean;
+}
+
+// 時限設定
+export interface ClassPeriod {
+  id: string;
+  name: string; // 例: "1限", "2限"
+  startTime: string; // HH:MM
+  endTime: string; // HH:MM
+}
+
+// 時間割テンプレート
+export interface TimeTableTemplate {
+  id: string;
+  dayOfWeek: number; // 0: 日曜日, 1: 月曜日, ..., 6: 土曜日
+  periodId: string; // ClassPeriod の id
+  title: string;
+  type: CalendarEventType;
+  location?: string;
+  memo?: string;
+  tags?: string[];
+  notification?: NotificationTiming;
+}
+
+// 学期設定
+export interface Semester {
+  id: string;
+  name: string; // 例: "2024年度 後期"
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+}
+
+// 休暇設定
+export interface Holiday {
+  id: string;
+  name: string; // 例: "冬休み", "春休み"
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+}
