@@ -12,7 +12,7 @@ export default function GreetingHeader({
   todayEvents,
 }: GreetingHeaderProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [timeToNextEvent, setTimeToNextEvent] = useState('1時間30分');
+  const timeToNextEvent = '1時間30分';
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -54,11 +54,15 @@ export default function GreetingHeader({
           <p className="text-base opacity-90 mb-1">{formatDate(currentTime)}</p>
           <p className="text-sm opacity-80">今日も頑張りましょう！✨</p>
           <div className="mt-3 inline-flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
-            <span className="text-xs font-medium">📅 今日の予定: {todayEvents}件</span>
+            <span className="text-xs font-medium">
+              📅 今日の予定: {todayEvents}件
+            </span>
           </div>
         </div>
         <div className="text-right">
-          <div className="text-5xl font-bold mb-0.5">{formatTime(currentTime)}</div>
+          <div className="text-5xl font-bold mb-0.5">
+            {formatTime(currentTime)}
+          </div>
           <div className="text-xs opacity-90">
             {currentTime.getHours() >= 12 ? 'PM' : 'AM'}
           </div>

@@ -9,41 +9,42 @@ interface ExpenseChartProps {
 export default function ExpenseChart({ data }: ExpenseChartProps) {
   // SVGドーナツチャートの計算
   const radius = 80;
-  const strokeWidth = 40;
   const center = 100;
-  const circumference = 2 * Math.PI * radius;
 
-  let currentAngle = -90; // 12時の位置から開始
+  const segments = data.categories.reduce(
+    (acc, category) => {
+      const angle = (category.percentage / 100) * 360;
+      const startAngle = acc.currentAngle;
+      const endAngle = acc.currentAngle + angle;
 
-  const segments = data.categories.map((category) => {
-    const angle = (category.percentage / 100) * 360;
-    const startAngle = currentAngle;
-    const endAngle = currentAngle + angle;
+      // 円弧のパスを計算
+      const startX = center + radius * Math.cos((startAngle * Math.PI) / 180);
+      const startY = center + radius * Math.sin((startAngle * Math.PI) / 180);
+      const endX = center + radius * Math.cos((endAngle * Math.PI) / 180);
+      const endY = center + radius * Math.sin((endAngle * Math.PI) / 180);
 
-    // 円弧のパスを計算
-    const startX =
-      center + radius * Math.cos((startAngle * Math.PI) / 180);
-    const startY =
-      center + radius * Math.sin((startAngle * Math.PI) / 180);
-    const endX = center + radius * Math.cos((endAngle * Math.PI) / 180);
-    const endY = center + radius * Math.sin((endAngle * Math.PI) / 180);
+      const largeArcFlag = angle > 180 ? 1 : 0;
 
-    const largeArcFlag = angle > 180 ? 1 : 0;
-
-    const path = `
+      const path = `
       M ${center},${center}
       L ${startX},${startY}
       A ${radius},${radius} 0 ${largeArcFlag} 1 ${endX},${endY}
       Z
     `;
 
-    currentAngle = endAngle;
+      acc.segments.push({
+        ...category,
+        path,
+      });
+      acc.currentAngle = endAngle;
 
-    return {
-      ...category,
-      path,
-    };
-  });
+      return acc;
+    },
+    {
+      currentAngle: -90,
+      segments: [] as Array<(typeof data.categories)[0] & { path: string }>,
+    }
+  ).segments;
 
   return (
     <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">

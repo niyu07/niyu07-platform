@@ -44,11 +44,17 @@ const isCurrentEvent = (eventTime: string, nextEventTime?: string): boolean => {
   if (nextEventTime) {
     const [nextHour, nextMinute] = nextEventTime.split(':').map(Number);
     const nextTimeInMinutes = nextHour * 60 + nextMinute;
-    return currentTimeInMinutes >= eventTimeInMinutes && currentTimeInMinutes < nextTimeInMinutes;
+    return (
+      currentTimeInMinutes >= eventTimeInMinutes &&
+      currentTimeInMinutes < nextTimeInMinutes
+    );
   }
 
   // 最後のイベントの場合、開始時刻から2時間以内なら現在のイベントとする
-  return currentTimeInMinutes >= eventTimeInMinutes && currentTimeInMinutes < eventTimeInMinutes + 120;
+  return (
+    currentTimeInMinutes >= eventTimeInMinutes &&
+    currentTimeInMinutes < eventTimeInMinutes + 120
+  );
 };
 
 export default function EventTimeline({ events }: EventTimelineProps) {
@@ -101,7 +107,9 @@ export default function EventTimeline({ events }: EventTimelineProps) {
               {/* イベントカード */}
               <div className="flex-1 pb-3">
                 <div className="flex items-start gap-2.5">
-                  <div className={`text-xs font-medium w-14 mt-0.5 ${isCurrent ? 'text-orange-600 font-bold' : 'text-gray-500'}`}>
+                  <div
+                    className={`text-xs font-medium w-14 mt-0.5 ${isCurrent ? 'text-orange-600 font-bold' : 'text-gray-500'}`}
+                  >
                     {event.time}
                   </div>
                   <div
@@ -109,7 +117,9 @@ export default function EventTimeline({ events }: EventTimelineProps) {
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-base">{getEventIcon(event.type)}</span>
+                        <span className="text-base">
+                          {getEventIcon(event.type)}
+                        </span>
                         <h3 className="font-semibold text-sm">{event.title}</h3>
                       </div>
                       {event.deadline && (

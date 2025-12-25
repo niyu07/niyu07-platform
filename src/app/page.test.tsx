@@ -13,26 +13,26 @@ describe('Home Page', () => {
     // ホームページを描画する
     render(<Home />);
 
-    // 「To get started」というテキストが表示されているか確認
-    const heading = screen.getByText(/To get started/i);
+    // Productivity Hub というタイトルが表示されているか確認
+    const heading = screen.getByText(/Productivity Hub/i);
     expect(heading).toBeInTheDocument();
   });
 
-  it('Next.js のロゴが表示される', () => {
+  it('サイドバーが表示される', () => {
     // ホームページを描画する
     render(<Home />);
 
-    // Next.js のロゴ画像が表示されているか確認
-    const logo = screen.getByAltText('Next.js logo');
-    expect(logo).toBeInTheDocument();
+    // サイドバーの「ホーム」メニューが表示されているか確認
+    const homeMenu = screen.getByText('ホーム');
+    expect(homeMenu).toBeInTheDocument();
   });
 
-  it('Deploy Now ボタンが表示される', () => {
+  it('今月の支出カードが表示される', () => {
     // ホームページを描画する
     render(<Home />);
 
-    // Deploy Now ボタンが表示されているか確認
-    const deployButton = screen.getByText('Deploy Now');
-    expect(deployButton).toBeInTheDocument();
+    // 今月の支出カードが表示されているか確認
+    const expenseCard = screen.getByText('今月の支出');
+    expect(expenseCard).toBeInTheDocument();
   });
 });

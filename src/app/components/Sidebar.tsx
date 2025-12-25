@@ -7,7 +7,10 @@ interface SidebarProps {
   currentPage?: string;
 }
 
-export default function Sidebar({ user, currentPage = 'ホーム' }: SidebarProps) {
+export default function Sidebar({
+  user,
+  currentPage = 'ホーム',
+}: SidebarProps) {
   const menuItems = [
     { name: 'ホーム', icon: '🏠' },
     { name: '会計', icon: '💰' },
@@ -61,9 +64,7 @@ export default function Sidebar({ user, currentPage = 'ホーム' }: SidebarProp
       <div className="p-4 border-t border-gray-700">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-[#6366f1] rounded-full flex items-center justify-center">
-            <span className="text-sm font-bold">
-              {user.name.charAt(0)}
-            </span>
+            <span className="text-sm font-bold">{user.name.charAt(0)}</span>
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{user.name}</p>

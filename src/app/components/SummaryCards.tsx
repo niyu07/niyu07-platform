@@ -107,9 +107,7 @@ export default function SummaryCards({ data }: SummaryCardsProps) {
             ¥{(data.dependentLimit.remaining / 1000).toFixed(0)}k
           </div>
         </div>
-        <div className="text-xs text-orange-500 font-medium">
-          注意が必要
-        </div>
+        <div className="text-xs text-orange-500 font-medium">注意が必要</div>
         <div className="text-xs text-gray-500 mt-0.5">残り収入可能額</div>
       </div>
     </div>

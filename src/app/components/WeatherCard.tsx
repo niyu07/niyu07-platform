@@ -14,7 +14,9 @@ export default function WeatherCard({ weather }: WeatherCardProps) {
 
       <div className="mb-4">
         <div className="text-5xl font-bold mb-1">{weather.currentTemp}°C</div>
-        <div className="text-base opacity-90 font-medium">{weather.condition}</div>
+        <div className="text-base opacity-90 font-medium">
+          {weather.condition}
+        </div>
         <div className="text-xs opacity-75 mt-0.5">
           体感 {weather.feelsLike}°C
         </div>

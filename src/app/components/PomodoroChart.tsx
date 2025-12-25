@@ -9,25 +9,29 @@ export default function PomodoroChart({ data }: PomodoroChartProps) {
 
   return (
     <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-      <h2 className="text-lg font-bold text-gray-900 mb-2">
-        今週のポモドーロ
-      </h2>
+      <h2 className="text-lg font-bold text-gray-900 mb-2">今週のポモドーロ</h2>
       <p className="text-xs text-gray-500 mb-4">集中時間の推移</p>
 
       <div className="space-y-2.5">
         {data.map((item, index) => (
           <div key={index} className="flex items-center gap-2.5">
-            <div className={`w-7 text-xs font-medium ${
-              item.isToday
-                ? 'text-orange-600 font-bold'
-                : item.count === 0 ? 'text-gray-400' : 'text-gray-600'
-            }`}>
+            <div
+              className={`w-7 text-xs font-medium ${
+                item.isToday
+                  ? 'text-orange-600 font-bold'
+                  : item.count === 0
+                    ? 'text-gray-400'
+                    : 'text-gray-600'
+              }`}
+            >
               {item.day}
             </div>
             <div className="flex-1 relative">
-              <div className={`h-7 rounded-lg overflow-hidden ${
-                item.isToday ? 'bg-orange-50' : 'bg-gray-100'
-              }`}>
+              <div
+                className={`h-7 rounded-lg overflow-hidden ${
+                  item.isToday ? 'bg-orange-50' : 'bg-gray-100'
+                }`}
+              >
                 {item.count > 0 && (
                   <div
                     className={`h-full rounded-lg transition-all ${
@@ -40,11 +44,15 @@ export default function PomodoroChart({ data }: PomodoroChartProps) {
                 )}
               </div>
             </div>
-            <div className={`w-10 text-xs text-right ${
-              item.isToday
-                ? 'text-orange-600 font-bold'
-                : item.count === 0 ? 'text-gray-400' : 'text-gray-500'
-            }`}>
+            <div
+              className={`w-10 text-xs text-right ${
+                item.isToday
+                  ? 'text-orange-600 font-bold'
+                  : item.count === 0
+                    ? 'text-gray-400'
+                    : 'text-gray-500'
+              }`}
+            >
               {item.count > 0 ? item.count : '-'}
             </div>
           </div>
