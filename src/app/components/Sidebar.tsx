@@ -15,7 +15,7 @@ export default function Sidebar({
   const menuItems = [
     { name: 'ホーム', icon: '🏠', href: '/' },
     { name: '会計', icon: '💰', href: '/accounting' },
-    { name: 'カレンダー', icon: '📅', href: '#' },
+    { name: 'カレンダー', icon: '📅', href: '/calendar' },
     { name: 'タスク', icon: '✓', href: '#' },
     { name: 'ポモドーロ', icon: '🍅', href: '#' },
     { name: '学習ログ', icon: '📚', href: '#' },
