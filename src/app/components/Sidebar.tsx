@@ -1,6 +1,7 @@
 'use client';
 
 import { User } from '../types';
+import Link from 'next/link';
 
 interface SidebarProps {
   user: User;
@@ -12,14 +13,14 @@ export default function Sidebar({
   currentPage = 'ホーム',
 }: SidebarProps) {
   const menuItems = [
-    { name: 'ホーム', icon: '🏠' },
-    { name: '会計', icon: '💰' },
-    { name: 'カレンダー', icon: '📅' },
-    { name: 'タスク', icon: '✓' },
-    { name: 'ポモドーロ', icon: '🍅' },
-    { name: '学習ログ', icon: '📚' },
-    { name: '天気', icon: '🌤️' },
-    { name: '勤怠管理', icon: '⏰' },
+    { name: 'ホーム', icon: '🏠', href: '/' },
+    { name: '会計', icon: '💰', href: '/accounting' },
+    { name: 'カレンダー', icon: '📅', href: '#' },
+    { name: 'タスク', icon: '✓', href: '#' },
+    { name: 'ポモドーロ', icon: '🍅', href: '#' },
+    { name: '学習ログ', icon: '📚', href: '#' },
+    { name: '天気', icon: '🌤️', href: '#' },
+    { name: '勤怠管理', icon: '⏰', href: '#' },
   ];
 
   return (
@@ -38,8 +39,9 @@ export default function Sidebar({
       {/* メニュー */}
       <nav className="flex-1 px-3">
         {menuItems.map((item) => (
-          <button
+          <Link
             key={item.name}
+            href={item.href}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors ${
               currentPage === item.name
                 ? 'bg-[#6366f1] text-white'
@@ -48,7 +50,7 @@ export default function Sidebar({
           >
             <span className="text-xl">{item.icon}</span>
             <span className="text-sm font-medium">{item.name}</span>
-          </button>
+          </Link>
         ))}
       </nav>
 

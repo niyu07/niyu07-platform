@@ -6,6 +6,10 @@ import {
   ExpenseData,
   SummaryData,
   User,
+  Transaction,
+  MonthlyFinancialData,
+  AccountingKPI,
+  AccountingSettings,
 } from '../types';
 
 // モックユーザーデータ
@@ -213,4 +217,162 @@ export const mockSummaryData: SummaryData = {
     remaining: 180000,
   },
   needsAttention: true,
+};
+
+// モック会計データ
+
+// モック取引データ
+export const mockTransactions: Transaction[] = [
+  {
+    id: '1',
+    date: '2024/12/20',
+    type: '収入',
+    category: '業務委託',
+    detail: 'クライアントA Webデザイン',
+    amount: 85000,
+    client: '株式会社A',
+    taxCategory: '課税',
+    createdAt: '2024-12-20T10:00:00',
+    updatedAt: '2024-12-20T10:00:00',
+  },
+  {
+    id: '2',
+    date: '2024/12/18',
+    type: '経費',
+    category: '消耗品費',
+    detail: '参考書籍「React入門」',
+    amount: 3200,
+    taxCategory: '課税',
+    createdAt: '2024-12-18T14:30:00',
+    updatedAt: '2024-12-18T14:30:00',
+  },
+  {
+    id: '3',
+    date: '2024/12/15',
+    type: '経費',
+    category: '通信費',
+    detail: 'AWSサーバー費用',
+    amount: 1500,
+    taxCategory: '課税',
+    createdAt: '2024-12-15T09:00:00',
+    updatedAt: '2024-12-15T09:00:00',
+  },
+  {
+    id: '4',
+    date: '2024/12/12',
+    type: '収入',
+    category: '業務委託',
+    detail: 'クライアントB ロゴ作成',
+    amount: 45000,
+    client: '株式会社B',
+    taxCategory: '課税',
+    createdAt: '2024-12-12T11:00:00',
+    updatedAt: '2024-12-12T11:00:00',
+  },
+  {
+    id: '5',
+    date: '2024/12/10',
+    type: '経費',
+    category: '会議費',
+    detail: '打ち合わせ（カフェ）',
+    amount: 850,
+    taxCategory: '課税',
+    createdAt: '2024-12-10T15:20:00',
+    updatedAt: '2024-12-10T15:20:00',
+  },
+  {
+    id: '6',
+    date: '2024/11/25',
+    type: '収入',
+    category: '業務委託',
+    detail: 'クライアントC LP制作',
+    amount: 120000,
+    client: '株式会社C',
+    taxCategory: '課税',
+    createdAt: '2024-11-25T16:00:00',
+    updatedAt: '2024-11-25T16:00:00',
+  },
+  {
+    id: '7',
+    date: '2024/11/20',
+    type: '経費',
+    category: '地代家賃',
+    detail: '事務所家賃（11月分）',
+    amount: 80000,
+    taxCategory: '課税',
+    createdAt: '2024-11-20T10:00:00',
+    updatedAt: '2024-11-20T10:00:00',
+  },
+  {
+    id: '8',
+    date: '2024/11/15',
+    type: '経費',
+    category: '水道光熱費',
+    detail: '電気代（10月分）',
+    amount: 8500,
+    taxCategory: '課税',
+    createdAt: '2024-11-15T09:30:00',
+    updatedAt: '2024-11-15T09:30:00',
+  },
+  {
+    id: '9',
+    date: '2024/11/10',
+    type: '収入',
+    category: '業務委託',
+    detail: 'クライアントA バナー制作',
+    amount: 35000,
+    client: '株式会社A',
+    taxCategory: '課税',
+    createdAt: '2024-11-10T14:00:00',
+    updatedAt: '2024-11-10T14:00:00',
+  },
+  {
+    id: '10',
+    date: '2024/11/05',
+    type: '経費',
+    category: '通信費',
+    detail: 'インターネット料金',
+    amount: 5500,
+    taxCategory: '課税',
+    createdAt: '2024-11-05T10:00:00',
+    updatedAt: '2024-11-05T10:00:00',
+  },
+];
+
+// モック月別収支データ
+export const mockMonthlyFinancialData: MonthlyFinancialData[] = [
+  { month: '1月', profit: 35000, revenue: 50000, expense: 15000 },
+  { month: '2月', profit: 45000, revenue: 75000, expense: 30000 },
+  { month: '3月', profit: 55000, revenue: 90000, expense: 35000 },
+  { month: '4月', profit: 45000, revenue: 75000, expense: 30000 },
+  { month: '5月', profit: 70000, revenue: 100000, expense: 30000 },
+  { month: '6月', profit: 65000, revenue: 110000, expense: 45000 },
+  { month: '7月', profit: 55000, revenue: 95000, expense: 40000 },
+  { month: '8月', profit: 50000, revenue: 85000, expense: 35000 },
+  { month: '9月', profit: 60000, revenue: 105000, expense: 45000 },
+  { month: '10月', profit: 75000, revenue: 135000, expense: 60000 },
+  { month: '11月', profit: 85000, revenue: 150000, expense: 65000 },
+  { month: '12月', profit: 90000, revenue: 130000, expense: 40000 },
+];
+
+// モック会計KPIデータ
+export const mockAccountingKPI: AccountingKPI = {
+  yearRevenue: 920000,
+  yearRevenueChange: 15.2,
+  yearExpense: 340000,
+  expenseRate: 37,
+  businessIncome: 230000, // 920000 - 340000 - 350000(青色控除) = 230000
+  dependentRemaining: 180000,
+};
+
+// モック会計設定
+export const mockAccountingSettings: AccountingSettings = {
+  fiscalYearStart: 1,
+  blueReturnDeduction: 650000,
+  basicDeduction: 480000,
+  dependentIncomeLimit: 480000,
+  currencyFormat: '¥',
+  displayFormat: 'normal',
+  customIncomeCategories: [],
+  customExpenseCategories: [],
 };
