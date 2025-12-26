@@ -19,7 +19,7 @@ export default function Sidebar({
     { name: 'タスク', icon: '✓', href: '/tasks' },
     { name: 'ポモドーロ', icon: '🍅', href: '/pomodoro' },
     { name: '学習ログ', icon: '📚', href: '/study-log' },
-    { name: '天気', icon: '🌤️', href: '#' },
+    { name: '天気', icon: '🌤️', href: '/weather' },
     { name: '勤怠管理', icon: '⏰', href: '#' },
   ];
 
