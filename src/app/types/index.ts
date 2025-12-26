@@ -463,3 +463,102 @@ export interface Holiday {
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
 }
+
+// 学習ログの型定義
+
+// 学習カテゴリ
+export type StudyCategory =
+  | 'Programming'
+  | 'Design'
+  | 'English'
+  | 'Math'
+  | 'Other';
+
+// 学習記録
+export interface StudyLog {
+  id: string;
+  date: string; // YYYY-MM-DD
+  time: string; // HH:mm
+  category: StudyCategory;
+  durationMinutes: number; // 学習時間（分）
+  content: string; // 学習内容
+  material?: string; // 使用教材（任意）
+  rating?: number; // 習得度（1-5）
+  createdAt: string;
+  updatedAt: string;
+}
+
+// カテゴリ別累計
+export interface CategoryTotal {
+  category: StudyCategory;
+  totalHours: number; // 累計時間
+  level: number; // レベル
+  color: string; // グラフ表示用の色
+}
+
+// 学習時間の推移データ
+export interface StudyTimeData {
+  date: string; // 日付ラベル（12/14など）
+  hours: number; // 学習時間
+  average: number; // 平均線用の値
+}
+
+// スキル
+export interface Skill {
+  id: string;
+  name: string;
+  category: StudyCategory;
+  progress: number; // 習得率（0-100）
+  isUnlocked: boolean; // 解放済みかどうか
+  dependencies?: string[]; // 依存スキルのID配列
+}
+
+// 月次目標
+export interface MonthlyGoal {
+  category: StudyCategory;
+  current: number; // 現在の時間
+  target: number; // 目標時間
+  percentage: number; // 達成率
+}
+
+// 教材レコメンド
+export interface MaterialRecommendation {
+  id: string;
+  title: string;
+  type: '講座' | '書籍' | '動画' | 'その他';
+  category: StudyCategory;
+  reason: string; // レコメンド理由
+  url?: string;
+}
+
+// 学習ログダッシュボード
+export interface StudyLogDashboard {
+  today: {
+    hours: number;
+    goalHours: number;
+    remaining: number;
+  };
+  weekly: {
+    hours: number;
+    weekOverWeekChange: number; // 先週比（時間）
+    weekOverWeekPercentage: number; // 先週比（%）
+  };
+  streak: {
+    days: number;
+    isNewRecord: boolean;
+  };
+  total: {
+    hours: number;
+    level: number;
+    title: string; // 称号（例: "Master Learner"）
+  };
+  weeklyData: StudyTimeData[]; // 週次チャート用データ
+  monthlyData: StudyTimeData[]; // 月次チャート用データ
+  yearlyData: StudyTimeData[]; // 年次チャート用データ
+  categoryTotals: CategoryTotal[]; // カテゴリ別累計
+  skills: Skill[]; // スキルツリー
+  todayLogs: StudyLog[]; // 今日のログ
+  monthlyGoals: MonthlyGoal[]; // 月次目標
+  recommendations: MaterialRecommendation[]; // 教材レコメンド
+  encouragementMessage?: string; // 応援メッセージ
+}

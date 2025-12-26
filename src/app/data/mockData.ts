@@ -12,6 +12,13 @@ import {
   AccountingSettings,
   CalendarEvent,
   CalendarSettings,
+  StudyLog,
+  StudyLogDashboard,
+  CategoryTotal,
+  StudyTimeData,
+  Skill,
+  MonthlyGoal,
+  MaterialRecommendation,
 } from '../types';
 
 // モックユーザーデータ
@@ -835,3 +842,189 @@ export const mockTaskManagementData: Task[] = [
     updatedAt: '2025-12-22T09:00:00',
   },
 ];
+
+// 学習ログのモックデータ
+// 現在日: 2025年12月26日（木）
+
+// 今日の学習ログ
+export const mockTodayStudyLogs: StudyLog[] = [
+  {
+    id: 'log-1',
+    date: '2025-12-26',
+    time: '16:30',
+    category: 'Programming',
+    durationMinutes: 150, // 2h 30m
+    content: 'ReactのuseEffectについて学習。依存配列の挙動を確認。',
+    material: 'Udemy React講座',
+    rating: 4,
+    createdAt: '2025-12-26T16:30:00',
+    updatedAt: '2025-12-26T19:00:00',
+  },
+  {
+    id: 'log-2',
+    date: '2025-12-26',
+    time: '11:00',
+    category: 'English',
+    durationMinutes: 60, // 1h
+    content: 'TOEIC リーディング対策 Part5',
+    material: '公式問題集',
+    rating: 3,
+    createdAt: '2025-12-26T11:00:00',
+    updatedAt: '2025-12-26T12:00:00',
+  },
+];
+
+// 週次学習時間データ（12/14〜12/20）
+export const mockWeeklyStudyData: StudyTimeData[] = [
+  { date: '12/14', hours: 3.5, average: 3.8 },
+  { date: '12/15', hours: 4.0, average: 3.8 },
+  { date: '12/16', hours: 2.0, average: 3.8 },
+  { date: '12/17', hours: 5.0, average: 3.8 },
+  { date: '12/18', hours: 3.5, average: 3.8 },
+  { date: '12/19', hours: 6.5, average: 3.8 },
+  { date: '12/20', hours: 4.0, average: 3.8 },
+];
+
+// カテゴリ別累計データ
+export const mockCategoryTotals: CategoryTotal[] = [
+  {
+    category: 'Programming',
+    totalHours: 99.2,
+    level: 12,
+    color: '#4F7FFF',
+  },
+  {
+    category: 'Design',
+    totalHours: 62.0,
+    level: 8,
+    color: '#4CAF50',
+  },
+  {
+    category: 'English',
+    totalHours: 49.6,
+    level: 7,
+    color: '#9C27B0',
+  },
+  {
+    category: 'Math',
+    totalHours: 24.8,
+    level: 4,
+    color: '#FF9800',
+  },
+  {
+    category: 'Other',
+    totalHours: 12.4,
+    level: 2,
+    color: '#9E9E9E',
+  },
+];
+
+// スキルツリーデータ
+export const mockSkills: Skill[] = [
+  {
+    id: 'skill-1',
+    name: 'HTML/CSS',
+    category: 'Programming',
+    progress: 100,
+    isUnlocked: true,
+  },
+  {
+    id: 'skill-2',
+    name: 'JavaScript',
+    category: 'Programming',
+    progress: 80,
+    isUnlocked: true,
+    dependencies: ['skill-1'],
+  },
+  {
+    id: 'skill-3',
+    name: 'React',
+    category: 'Programming',
+    progress: 65,
+    isUnlocked: true,
+    dependencies: ['skill-2'],
+  },
+  {
+    id: 'skill-4',
+    name: 'Node.js',
+    category: 'Programming',
+    progress: 45,
+    isUnlocked: true,
+    dependencies: ['skill-2'],
+  },
+  {
+    id: 'skill-5',
+    name: 'Next.js',
+    category: 'Programming',
+    progress: 0,
+    isUnlocked: false,
+    dependencies: ['skill-3'],
+  },
+];
+
+// 月次目標データ
+export const mockMonthlyGoals: MonthlyGoal[] = [
+  {
+    category: 'Programming',
+    current: 28,
+    target: 40,
+    percentage: 70,
+  },
+  {
+    category: 'English',
+    current: 15,
+    target: 20,
+    percentage: 75,
+  },
+];
+
+// 教材レコメンドデータ
+export const mockRecommendations: MaterialRecommendation[] = [
+  {
+    id: 'rec-1',
+    title: 'Next.js完全ガイド',
+    type: '講座',
+    category: 'Programming',
+    reason: 'React習得済みのため',
+    url: '#',
+  },
+  {
+    id: 'rec-2',
+    title: '英文法Perfect Guide',
+    type: '書籍',
+    category: 'English',
+    reason: 'TOEIC対策に最適',
+  },
+];
+
+// 学習ログダッシュボードのモックデータ
+export const mockStudyLogDashboard: StudyLogDashboard = {
+  today: {
+    hours: 3.5,
+    goalHours: 5.0,
+    remaining: 1.5,
+  },
+  weekly: {
+    hours: 18,
+    weekOverWeekChange: 3,
+    weekOverWeekPercentage: 20,
+  },
+  streak: {
+    days: 12,
+    isNewRecord: true,
+  },
+  total: {
+    hours: 248,
+    level: 15,
+    title: 'Master Learner',
+  },
+  weeklyData: mockWeeklyStudyData,
+  monthlyData: [], // 必要に応じて追加
+  yearlyData: [], // 必要に応じて追加
+  categoryTotals: mockCategoryTotals,
+  skills: mockSkills,
+  todayLogs: mockTodayStudyLogs,
+  monthlyGoals: mockMonthlyGoals,
+  recommendations: mockRecommendations,
+  encouragementMessage: 'このペースなら目標達成できます！',
+};
