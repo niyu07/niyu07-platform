@@ -1,15 +1,134 @@
+// タスク管理の型定義
+
 // 優先度の型定義
 export type Priority = '高' | '中' | '低';
+
+// タスク状態
+export type TaskStatus = '未着手' | '進行中' | '完了';
+
+// タスクカテゴリ
+export type TaskCategory =
+  | 'Design'
+  | 'Coding'
+  | 'Accounting'
+  | 'Report'
+  | 'Admin'
+  | 'Dev'
+  | 'React'
+  | 'Client A'
+  | 'Client B'
+  | 'その他';
+
+// タスクビューの種類
+export type TaskView = 'カンバン' | 'リスト' | 'カレンダー';
+
+// サブタスク
+export interface Subtask {
+  id: string;
+  title: string;
+  completed: boolean;
+  order: number;
+}
 
 // タスクの型定義
 export interface Task {
   id: string;
-  content: string;
-  completed: boolean;
-  priority: Priority;
-  dueDate?: string;
-  tags?: string[];
-  memo?: string;
+  title: string; // タスク名
+  description?: string; // 詳細説明
+  status: TaskStatus; // 状態（未着手/進行中/完了）
+  priority: Priority; // 優先度
+  dueDate?: string; // 期日 (YYYY/MM/DD)
+  estimatedMinutes?: number; // 見積時間（分）
+  actualMinutes?: number; // 実績時間（分）
+  categories?: TaskCategory[]; // カテゴリ/タグ
+  subtasks?: Subtask[]; // サブタスク
+  completedAt?: string; // 完了日時（ISO string）
+  isOverdue?: boolean; // 遅延フラグ（完了時に期限超過していた場合true）
+  pomodoroSessions?: number; // ポモドーロセッション数
+  linkedCalendarEventId?: string; // 連携カレンダーイベントID
+  createdAt: string; // 作成日時
+  updatedAt: string; // 更新日時
+
+  // 以下は後方互換性のため
+  content?: string; // titleのエイリアス
+  completed?: boolean; // status === '完了'のエイリアス
+  tags?: string[]; // categoriesのエイリアス
+  memo?: string; // descriptionのエイリアス
+}
+
+// タスクフィルター条件
+export interface TaskFilter {
+  status?: TaskStatus[];
+  priority?: Priority[];
+  categories?: TaskCategory[];
+  dueDateRange?: {
+    from?: string; // YYYY/MM/DD
+    to?: string; // YYYY/MM/DD
+  };
+  estimatedTimeRange?: {
+    min?: number; // 分
+    max?: number; // 分
+  };
+  searchText?: string;
+  showOverdueOnly?: boolean;
+}
+
+// タスクソート条件
+export type TaskSortField =
+  | 'dueDate'
+  | 'priority'
+  | 'estimatedMinutes'
+  | 'actualMinutes'
+  | 'createdAt'
+  | 'updatedAt';
+export type TaskSortOrder = 'asc' | 'desc';
+
+export interface TaskSort {
+  field: TaskSortField;
+  order: TaskSortOrder;
+}
+
+// タスク統計（今週）
+export interface TaskStatistics {
+  totalTasks: number; // 全タスク数
+  completedTasks: number; // 完了タスク数
+  completionRate: number; // 完了率（%）
+  weekOverWeekChange: number; // 先週比（%）
+  averageCompletionMinutes: number; // 平均完了時間（分）
+  overdueTasks: number; // 遅延タスク数
+  inProgressTasks: number; // 進行中タスク数
+  pendingTasks: number; // 未着手タスク数
+}
+
+// カテゴリ別精度分析
+export interface CategoryAccuracy {
+  category: TaskCategory;
+  totalEstimated: number; // 見積合計時間（分）
+  totalActual: number; // 実績合計時間（分）
+  accuracy: number; // 精度（%）= 実績/見積 × 100
+  taskCount: number; // タスク数
+  averageEstimated: number; // 平均見積時間
+  averageActual: number; // 平均実績時間
+  underestimationRate: number; // 過小評価率（精度<100%の場合の差分%）
+  recommendedMultiplier: number; // 推奨係数（次回見積時の乗数）
+}
+
+// インサイトデータ
+export interface TaskInsight {
+  type: 'underestimation' | 'overestimation' | 'accurate' | 'warning';
+  category?: TaskCategory;
+  message: string; // 例: "あなたはデザイン作業を平均20%過小評価しています。"
+  suggestion?: string; // 例: "次回のデザインタスクは、見積を1.2倍に設定することをおすすめします。"
+  severity: 'low' | 'medium' | 'high';
+}
+
+// タスクダッシュボードデータ
+export interface TaskDashboard {
+  statistics: TaskStatistics;
+  insights: TaskInsight[];
+  categoryAccuracies: CategoryAccuracy[];
+  upcomingDeadlines: Task[]; // 期日が近いタスク（3日以内）
+  overdueTasksList: Task[]; // 期限切れタスク
 }
 
 // 予定の種別
