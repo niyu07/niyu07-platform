@@ -86,79 +86,127 @@ export const mockEvents: Event[] = [
   },
 ];
 
-// モックタスクデータ
+// モックタスクデータ（後方互換性のため保持、旧形式）
 export const mockTasks: Task[] = [
   {
     id: '1',
+    title: 'Webサイトのデザイン修正',
     content: 'Webサイトのデザイン修正',
+    status: '完了',
     completed: true,
     priority: '高',
+    createdAt: '2025-12-20T09:00:00',
+    updatedAt: '2025-12-22T17:00:00',
   },
   {
     id: '2',
+    title: '確定申告の準備を始める',
     content: '確定申告の準備を始める',
+    status: '未着手',
     completed: false,
     priority: '中',
+    createdAt: '2025-12-21T10:00:00',
+    updatedAt: '2025-12-21T10:00:00',
   },
   {
     id: '3',
+    title: '英語の宿題を提出',
     content: '英語の宿題を提出',
+    status: '未着手',
     completed: false,
     priority: '高',
+    createdAt: '2025-12-22T08:00:00',
+    updatedAt: '2025-12-22T08:00:00',
   },
   {
     id: '4',
+    title: '買い物リスト作成',
     content: '買い物リスト作成',
+    status: '完了',
     completed: true,
     priority: '低',
+    createdAt: '2025-12-20T11:00:00',
+    updatedAt: '2025-12-20T15:00:00',
   },
   {
     id: '5',
+    title: 'クライアントにメール返信',
     content: 'クライアントにメール返信',
+    status: '未着手',
     completed: false,
     priority: '高',
+    createdAt: '2025-12-23T09:00:00',
+    updatedAt: '2025-12-23T09:00:00',
   },
   {
     id: '6',
+    title: 'プロジェクト資料の整理',
     content: 'プロジェクト資料の整理',
+    status: '完了',
     completed: true,
     priority: '中',
+    createdAt: '2025-12-21T13:00:00',
+    updatedAt: '2025-12-22T10:00:00',
   },
   {
     id: '7',
+    title: 'データベース設計書作成',
     content: 'データベース設計書作成',
+    status: '未着手',
     completed: false,
     priority: '中',
+    createdAt: '2025-12-22T14:00:00',
+    updatedAt: '2025-12-22T14:00:00',
   },
   {
     id: '8',
+    title: 'テストコードの追加',
     content: 'テストコードの追加',
+    status: '完了',
     completed: true,
     priority: '低',
+    createdAt: '2025-12-20T16:00:00',
+    updatedAt: '2025-12-21T12:00:00',
   },
   {
     id: '9',
+    title: 'ミーティング議事録作成',
     content: 'ミーティング議事録作成',
+    status: '未着手',
     completed: false,
     priority: '低',
+    createdAt: '2025-12-23T11:00:00',
+    updatedAt: '2025-12-23T11:00:00',
   },
   {
     id: '10',
+    title: 'レビュー対応',
     content: 'レビュー対応',
+    status: '完了',
     completed: true,
     priority: '中',
+    createdAt: '2025-12-21T15:00:00',
+    updatedAt: '2025-12-22T14:00:00',
   },
   {
     id: '11',
+    title: 'ドキュメント更新',
     content: 'ドキュメント更新',
+    status: '未着手',
     completed: false,
     priority: '低',
+    createdAt: '2025-12-23T10:00:00',
+    updatedAt: '2025-12-23T10:00:00',
   },
   {
     id: '12',
+    title: 'バグ修正',
     content: 'バグ修正',
+    status: '未着手',
     completed: false,
     priority: '高',
+    createdAt: '2025-12-23T12:00:00',
+    updatedAt: '2025-12-23T12:00:00',
   },
 ];
 
@@ -595,3 +643,195 @@ export const mockCalendarSettings: CalendarSettings = {
   },
   showWeekNumbers: false,
 };
+
+// モックタスク管理データ（デザイン仕様に準拠）
+// 2025年12月26日（木）を「今日」として設定
+export const mockTaskManagementData: Task[] = [
+  // 未着手（2件）
+  {
+    id: 'task-1',
+    title: 'Webサイトデザイン修正',
+    description: 'クライアントAのWebサイトのデザイン修正依頼対応',
+    status: '未着手',
+    priority: '高',
+    dueDate: '2025/12/26', // 今日
+    estimatedMinutes: 180, // 3h
+    categories: ['Design', 'Client A'],
+    subtasks: [
+      {
+        id: 'st-1-1',
+        title: 'ヘッダーデザイン修正',
+        completed: true,
+        order: 1,
+      },
+      {
+        id: 'st-1-2',
+        title: 'フッターデザイン修正',
+        completed: true,
+        order: 2,
+      },
+      { id: 'st-1-3', title: 'カラースキーム調整', completed: false, order: 3 },
+      { id: 'st-1-4', title: 'レスポンシブ対応', completed: false, order: 4 },
+      { id: 'st-1-5', title: 'デザインレビュー', completed: false, order: 5 },
+    ],
+    createdAt: '2025-12-23T09:00:00',
+    updatedAt: '2025-12-25T15:30:00',
+  },
+  {
+    id: 'task-2',
+    title: '週次レポート作成',
+    description: '先週の業務レポートをまとめる',
+    status: '未着手',
+    priority: '低',
+    dueDate: '2025/12/26', // 今日（あと0日）
+    estimatedMinutes: 60, // 1h
+    categories: ['Report'],
+    createdAt: '2025-12-24T10:00:00',
+    updatedAt: '2025-12-24T10:00:00',
+  },
+  // 進行中（1件）
+  {
+    id: 'task-3',
+    title: '会計データの入力',
+    description: '12月分の収支データを会計システムに入力',
+    status: '進行中',
+    priority: '中',
+    dueDate: '2025/12/28', // あと2日
+    estimatedMinutes: 120, // 2h
+    actualMinutes: 30, // 実績30分（進行中）
+    categories: ['Accounting', 'Admin'],
+    subtasks: [
+      { id: 'st-3-1', title: '収入データ入力', completed: true, order: 1 },
+      { id: 'st-3-2', title: '経費データ入力', completed: false, order: 2 },
+    ],
+    pomodoroSessions: 1, // 25分×1セッション
+    createdAt: '2025-12-26T08:00:00',
+    updatedAt: '2025-12-26T09:30:00',
+  },
+  // 完了（1件・遅延フラグあり）
+  {
+    id: 'task-4',
+    title: 'Reactコンポーネント実装',
+    description: '新しいReactコンポーネントを実装してテストを書く',
+    status: '完了',
+    priority: '高',
+    dueDate: '2025/12/22', // 期限：12/22
+    estimatedMinutes: 180, // 見積：3h
+    actualMinutes: 240, // 実績：4h（過小評価）
+    categories: ['Dev', 'React'],
+    completedAt: '2025-12-25T18:00:00', // 12/25に完了（遅延）
+    isOverdue: true, // 遅延フラグ
+    pomodoroSessions: 8, // 25分×8セッション = 200分（実績時間と一致しない場合あり）
+    createdAt: '2025-12-20T09:00:00',
+    updatedAt: '2025-12-25T18:00:00',
+  },
+  // 追加のタスク（統計・インサイト計算用）
+  {
+    id: 'task-5',
+    title: 'UIプロトタイプ作成',
+    description: 'Figmaで新機能のUIプロトタイプを作成',
+    status: '完了',
+    priority: '中',
+    dueDate: '2025/12/20',
+    estimatedMinutes: 120, // 2h
+    actualMinutes: 150, // 2.5h（過小評価25%）
+    categories: ['Design'],
+    completedAt: '2025-12-20T16:30:00',
+    createdAt: '2025-12-18T10:00:00',
+    updatedAt: '2025-12-20T16:30:00',
+  },
+  {
+    id: 'task-6',
+    title: 'APIエンドポイント実装',
+    description: 'RESTful APIの新エンドポイントを実装',
+    status: '完了',
+    priority: '高',
+    dueDate: '2025/12/21',
+    estimatedMinutes: 240, // 4h
+    actualMinutes: 230, // 3.8h（精度高い）
+    categories: ['Coding', 'Dev'],
+    completedAt: '2025-12-21T17:00:00',
+    createdAt: '2025-12-19T09:00:00',
+    updatedAt: '2025-12-21T17:00:00',
+  },
+  {
+    id: 'task-7',
+    title: 'テストケース作成',
+    description: 'ユニットテストとE2Eテストを作成',
+    status: '完了',
+    priority: '中',
+    dueDate: '2025/12/22',
+    estimatedMinutes: 180, // 3h
+    actualMinutes: 170, // 2.8h（精度高い）
+    categories: ['Coding'],
+    completedAt: '2025-12-22T15:00:00',
+    createdAt: '2025-12-20T10:00:00',
+    updatedAt: '2025-12-22T15:00:00',
+  },
+  {
+    id: 'task-8',
+    title: 'ロゴデザイン提案',
+    description: 'クライアントB向けのロゴデザイン案を3つ作成',
+    status: '完了',
+    priority: '高',
+    dueDate: '2025/12/19',
+    estimatedMinutes: 150, // 2.5h
+    actualMinutes: 180, // 3h（過小評価20%）
+    categories: ['Design', 'Client B'],
+    completedAt: '2025-12-19T18:00:00',
+    createdAt: '2025-12-17T09:00:00',
+    updatedAt: '2025-12-19T18:00:00',
+  },
+  {
+    id: 'task-9',
+    title: 'データベース最適化',
+    description: 'クエリのパフォーマンスを改善',
+    status: '完了',
+    priority: '中',
+    dueDate: '2025/12/23',
+    estimatedMinutes: 120, // 2h
+    actualMinutes: 115, // 1.9h（精度高い）
+    categories: ['Coding'],
+    completedAt: '2025-12-23T14:00:00',
+    createdAt: '2025-12-21T10:00:00',
+    updatedAt: '2025-12-23T14:00:00',
+  },
+  // 今後のタスク（期日が近い）
+  {
+    id: 'task-10',
+    title: '月次報告書作成',
+    description: '12月の月次報告書を作成',
+    status: '未着手',
+    priority: '高',
+    dueDate: '2025/12/27', // 明日
+    estimatedMinutes: 90,
+    categories: ['Report', 'Admin'],
+    createdAt: '2025-12-25T10:00:00',
+    updatedAt: '2025-12-25T10:00:00',
+  },
+  {
+    id: 'task-11',
+    title: 'クライアントミーティング準備',
+    description: 'プレゼン資料の作成と練習',
+    status: '未着手',
+    priority: '高',
+    dueDate: '2025/12/29', // あと3日
+    estimatedMinutes: 120,
+    categories: ['Admin', 'Client A'],
+    createdAt: '2025-12-25T11:00:00',
+    updatedAt: '2025-12-25T11:00:00',
+  },
+  // 遅延タスク
+  {
+    id: 'task-12',
+    title: 'セキュリティ監査対応',
+    description: 'セキュリティ監査で指摘された項目の修正',
+    status: '未着手',
+    priority: '高',
+    dueDate: '2025/12/24', // 遅延（2日前）
+    estimatedMinutes: 180,
+    categories: ['Coding', 'Dev'],
+    createdAt: '2025-12-22T09:00:00',
+    updatedAt: '2025-12-22T09:00:00',
+  },
+];
