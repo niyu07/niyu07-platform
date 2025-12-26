@@ -17,7 +17,7 @@ export default function Sidebar({
     { name: '会計', icon: '💰', href: '/accounting' },
     { name: 'カレンダー', icon: '📅', href: '/calendar' },
     { name: 'タスク', icon: '✓', href: '/tasks' },
-    { name: 'ポモドーロ', icon: '🍅', href: '#' },
+    { name: 'ポモドーロ', icon: '🍅', href: '/pomodoro' },
     { name: '学習ログ', icon: '📚', href: '#' },
     { name: '天気', icon: '🌤️', href: '#' },
     { name: '勤怠管理', icon: '⏰', href: '#' },
