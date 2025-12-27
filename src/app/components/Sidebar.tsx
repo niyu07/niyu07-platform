@@ -56,10 +56,13 @@ export default function Sidebar({
 
       {/* 設定 */}
       <div className="px-3 pb-4">
-        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-[#252841] transition-colors">
+        <Link
+          href="/settings"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-[#252841] transition-colors"
+        >
           <span className="text-xl">⚙️</span>
           <span className="text-sm font-medium">設定</span>
-        </button>
+        </Link>
       </div>
 
       {/* ユーザー情報 */}

@@ -28,6 +28,14 @@ export default function ClockInCard({
   const [showClockOutForm, setShowClockOutForm] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
+  // クライアントサイドマウント確認（ハイドレーションエラー回避）
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    // マウント状態の追跡のため、ここでsetStateを使用
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsMounted(true);
+  }, []);
+
   // 現在時刻の更新（出勤中のタイマー用）
   useEffect(() => {
     const timer = setInterval(() => {
@@ -150,9 +158,15 @@ export default function ClockInCard({
             {/* タイマー表示 */}
             <div className="mb-12">
               <div className="text-[120px] font-bold leading-none tracking-tight font-mono">
-                {formatTime(elapsedTime.hours)}:
-                {formatTime(elapsedTime.minutes)}:
-                {formatTime(elapsedTime.seconds)}
+                {isMounted ? (
+                  <>
+                    {formatTime(elapsedTime.hours)}:
+                    {formatTime(elapsedTime.minutes)}:
+                    {formatTime(elapsedTime.seconds)}
+                  </>
+                ) : (
+                  '00:00:00'
+                )}
               </div>
             </div>
 
@@ -172,7 +186,13 @@ export default function ClockInCard({
                     Duration
                   </p>
                   <p className="text-3xl font-bold">
-                    {elapsedTime.hours}h {elapsedTime.minutes}m
+                    {isMounted ? (
+                      <>
+                        {elapsedTime.hours}h {elapsedTime.minutes}m
+                      </>
+                    ) : (
+                      '0h 0m'
+                    )}
                   </p>
                 </div>
               </div>
