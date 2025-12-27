@@ -562,3 +562,62 @@ export interface StudyLogDashboard {
   recommendations: MaterialRecommendation[]; // 教材レコメンド
   encouragementMessage?: string; // 応援メッセージ
 }
+
+// 勤怠管理の型定義
+
+// 勤務先の種類
+export type WorkLocationType = '時給制' | '日給制' | '業務委託';
+
+// 勤務先マスタ
+export interface WorkLocation {
+  id: string;
+  name: string;
+  type: WorkLocationType;
+  hourlyRate?: number; // 時給（時給制の場合）
+  dailyRate?: number; // 日給（日給制の場合）
+  projectRate?: number; // 単価（業務委託の場合、時間単価）
+  color: string; // UI表示用カラー
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 勤怠記録ステータス
+export type AttendanceStatus = '未出勤' | '出勤中' | '退勤済み';
+
+// 勤怠記録
+export interface AttendanceRecord {
+  id: string;
+  date: string; // YYYY-MM-DD
+  workLocationId: string;
+  status: AttendanceStatus;
+  clockInTime?: string; // HH:MM（出勤時刻）
+  clockOutTime?: string; // HH:MM（退勤時刻）
+  breakMinutes: number; // 休憩時間（分）
+  workMinutes?: number; // 実働時間（分）= (退勤 - 出勤) - 休憩
+  memo?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 月次勤怠サマリー
+export interface MonthlyAttendanceSummary {
+  month: string; // YYYY-MM
+  totalWorkMinutes: number; // 総勤務時間（分）
+  totalWorkDays: number; // 出勤日数
+  totalSalary: number; // 推定収入（円）
+  workLocationBreakdown: {
+    workLocationId: string;
+    workLocationName: string;
+    workMinutes: number;
+    workDays: number;
+    salary: number;
+  }[];
+}
+
+// 週間勤務時間データ（グラフ用）
+export interface WeeklyWorkData {
+  dayOfWeek: string; // "月" - "日"
+  workMinutes: number; // その曜日の勤務時間（分）
+  date: string; // YYYY-MM-DD（ツールチップ用）
+}
