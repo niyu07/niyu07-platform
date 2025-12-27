@@ -208,6 +208,33 @@ export interface User {
   name: string;
   email: string;
   avatar?: string;
+  phoneNumber?: string;
+  occupation?: string;
+  dateOfBirth?: string; // YYYY-MM-DD
+  companyName?: string; // 屋号
+}
+
+// 事業情報の型定義
+export interface BusinessInfo {
+  foundedDate?: string; // YYYY-MM-DD
+  blueReturnNumber?: string; // 青色申告承認番号
+  businessDescription?: string;
+  address?: Address;
+}
+
+// 住所の型定義
+export interface Address {
+  postalCode: string; // XXX-XXXX
+  prefecture: string;
+  city: string;
+  street: string;
+  building?: string;
+}
+
+// 扶養者情報の型定義
+export interface DependentInfo {
+  parentIncomeRange?: '0-103' | '103-150' | '150-201' | '201+';
+  usingStudentPensionExemption: boolean;
 }
 
 // 会計管理の型定義
