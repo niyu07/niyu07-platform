@@ -4,13 +4,53 @@ import { useState } from 'react';
 import { User, BusinessInfo, DependentInfo } from '@/app/types';
 
 const PREFECTURES = [
-  '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
-  '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
-  '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県',
-  '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県',
-  '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県',
-  '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県',
-  '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県',
+  '北海道',
+  '青森県',
+  '岩手県',
+  '宮城県',
+  '秋田県',
+  '山形県',
+  '福島県',
+  '茨城県',
+  '栃木県',
+  '群馬県',
+  '埼玉県',
+  '千葉県',
+  '東京都',
+  '神奈川県',
+  '新潟県',
+  '富山県',
+  '石川県',
+  '福井県',
+  '山梨県',
+  '長野県',
+  '岐阜県',
+  '静岡県',
+  '愛知県',
+  '三重県',
+  '滋賀県',
+  '京都府',
+  '大阪府',
+  '兵庫県',
+  '奈良県',
+  '和歌山県',
+  '鳥取県',
+  '島根県',
+  '岡山県',
+  '広島県',
+  '山口県',
+  '徳島県',
+  '香川県',
+  '愛媛県',
+  '高知県',
+  '福岡県',
+  '佐賀県',
+  '長崎県',
+  '熊本県',
+  '大分県',
+  '宮崎県',
+  '鹿児島県',
+  '沖縄県',
 ];
 
 export default function AccountSettings() {
@@ -81,7 +121,10 @@ export default function AccountSettings() {
       newErrors.email = 'メールアドレスが不正です';
     }
 
-    if (businessInfo.address && !validatePostalCode(businessInfo.address.postalCode)) {
+    if (
+      businessInfo.address &&
+      !validatePostalCode(businessInfo.address.postalCode)
+    ) {
       newErrors.postalCode = '郵便番号はXXX-XXXX形式で入力してください';
     }
 
@@ -100,7 +143,9 @@ export default function AccountSettings() {
       {/* ヘッダー */}
       <div className="border-b pb-4">
         <h2 className="text-2xl font-bold text-gray-900">アカウント設定</h2>
-        <p className="text-sm text-gray-600 mt-1">プロフィール情報や事業情報の管理</p>
+        <p className="text-sm text-gray-600 mt-1">
+          プロフィール情報や事業情報の管理
+        </p>
       </div>
 
       {/* プロフィール */}
@@ -109,7 +154,9 @@ export default function AccountSettings() {
 
         {/* 写真 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">写真</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            写真
+          </label>
           <div className="flex items-center gap-4">
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white text-3xl font-bold">
               {user.name.charAt(0)}
@@ -134,7 +181,9 @@ export default function AccountSettings() {
                 errors.name ? 'border-red-500' : 'border-gray-300'
               }`}
             />
-            {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+            {errors.name && (
+              <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+            )}
           </div>
 
           <div>
@@ -151,10 +200,14 @@ export default function AccountSettings() {
                 }`}
               />
               {validateEmail(user.email) && (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500">✓</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500">
+                  ✓
+                </span>
               )}
             </div>
-            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+            )}
           </div>
         </div>
 
@@ -167,11 +220,15 @@ export default function AccountSettings() {
             <input
               type="text"
               value={user.companyName}
-              onChange={(e) => setUser({ ...user, companyName: e.target.value })}
+              onChange={(e) =>
+                setUser({ ...user, companyName: e.target.value })
+              }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="山田デザイン事務所"
             />
-            <p className="text-xs text-gray-500 mt-1">確定申告書類に使用されます</p>
+            <p className="text-xs text-gray-500 mt-1">
+              確定申告書類に使用されます
+            </p>
           </div>
 
           <div>
@@ -181,7 +238,9 @@ export default function AccountSettings() {
             <input
               type="tel"
               value={user.phoneNumber}
-              onChange={(e) => setUser({ ...user, phoneNumber: e.target.value })}
+              onChange={(e) =>
+                setUser({ ...user, phoneNumber: e.target.value })
+              }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="090-1234-5678"
             />
@@ -191,7 +250,9 @@ export default function AccountSettings() {
         {/* 職業と生年月日 */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">職業</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              職業
+            </label>
             <input
               type="text"
               value={user.occupation}
@@ -202,15 +263,21 @@ export default function AccountSettings() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">生年月日</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              生年月日
+            </label>
             <input
               type="date"
               value={user.dateOfBirth}
-              onChange={(e) => setUser({ ...user, dateOfBirth: e.target.value })}
+              onChange={(e) =>
+                setUser({ ...user, dateOfBirth: e.target.value })
+              }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="YYYY/MM/DD"
             />
-            <p className="text-xs text-gray-500 mt-1">扶養判定の計算に使用します</p>
+            <p className="text-xs text-gray-500 mt-1">
+              扶養判定の計算に使用します
+            </p>
           </div>
         </div>
       </div>
@@ -222,12 +289,17 @@ export default function AccountSettings() {
         {/* 開業日と青色申告承認番号 */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">開業日</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              開業日
+            </label>
             <input
               type="date"
               value={businessInfo.foundedDate}
               onChange={(e) =>
-                setBusinessInfo({ ...businessInfo, foundedDate: e.target.value })
+                setBusinessInfo({
+                  ...businessInfo,
+                  foundedDate: e.target.value,
+                })
               }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -242,7 +314,10 @@ export default function AccountSettings() {
               type="text"
               value={businessInfo.blueReturnNumber}
               onChange={(e) =>
-                setBusinessInfo({ ...businessInfo, blueReturnNumber: e.target.value })
+                setBusinessInfo({
+                  ...businessInfo,
+                  blueReturnNumber: e.target.value,
+                })
               }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -251,11 +326,16 @@ export default function AccountSettings() {
 
         {/* 事業内容 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">事業内容</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            事業内容
+          </label>
           <textarea
             value={businessInfo.businessDescription}
             onChange={(e) =>
-              setBusinessInfo({ ...businessInfo, businessDescription: e.target.value })
+              setBusinessInfo({
+                ...businessInfo,
+                businessDescription: e.target.value,
+              })
             }
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={3}
@@ -265,7 +345,9 @@ export default function AccountSettings() {
 
         {/* 事業所所在地 */}
         <div className="space-y-4">
-          <label className="block text-sm font-medium text-gray-700">事業所所在地</label>
+          <label className="block text-sm font-medium text-gray-700">
+            事業所所在地
+          </label>
 
           {/* 郵便番号 */}
           <div className="flex gap-2">
@@ -275,7 +357,10 @@ export default function AccountSettings() {
               onChange={(e) =>
                 setBusinessInfo({
                   ...businessInfo,
-                  address: { ...businessInfo.address!, postalCode: e.target.value },
+                  address: {
+                    ...businessInfo.address!,
+                    postalCode: e.target.value,
+                  },
                 })
               }
               className={`flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -301,7 +386,10 @@ export default function AccountSettings() {
               onChange={(e) =>
                 setBusinessInfo({
                   ...businessInfo,
-                  address: { ...businessInfo.address!, prefecture: e.target.value },
+                  address: {
+                    ...businessInfo.address!,
+                    prefecture: e.target.value,
+                  },
                 })
               }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -360,7 +448,9 @@ export default function AccountSettings() {
       {/* 扶養者情報 */}
       <div className="space-y-6 pt-6 border-t">
         <h3 className="text-lg font-semibold text-gray-900">扶養者情報</h3>
-        <p className="text-sm text-gray-600">扶養判定の精度向上のために入力してください</p>
+        <p className="text-sm text-gray-600">
+          扶養判定の精度向上のために入力してください
+        </p>
 
         {/* 親の年収 */}
         <div>
@@ -372,7 +462,8 @@ export default function AccountSettings() {
             onChange={(e) =>
               setDependentInfo({
                 ...dependentInfo,
-                parentIncomeRange: e.target.value as any,
+                parentIncomeRange: (e.target.value ||
+                  undefined) as DependentInfo['parentIncomeRange'],
               })
             }
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -401,7 +492,9 @@ export default function AccountSettings() {
           />
           <label htmlFor="pension" className="text-sm text-gray-700">
             <span className="font-medium">国民年金 学生納付特例を使用中</span>
-            <p className="text-xs text-gray-500 mt-1">年金保険料は全額控除対象です</p>
+            <p className="text-xs text-gray-500 mt-1">
+              年金保険料は全額控除対象です
+            </p>
           </label>
         </div>
       </div>

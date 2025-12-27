@@ -27,10 +27,12 @@ export default function ClockInCard({
   const [showClockInForm, setShowClockInForm] = useState(false);
   const [showClockOutForm, setShowClockOutForm] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [isMounted, setIsMounted] = useState(false);
 
   // クライアントサイドマウント確認（ハイドレーションエラー回避）
+  const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
+    // マウント状態の追跡のため、ここでsetStateを使用
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
   }, []);
 

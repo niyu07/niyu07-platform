@@ -11,6 +11,7 @@ export default function SettingsPage() {
   const user = {
     name: '山田太郎',
     email: 'yamada@example.com',
+    avatar: '',
   };
 
   const renderContent = () => {
@@ -89,16 +90,23 @@ export default function SettingsPage() {
           {/* ヘッダー */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">設定</h1>
-            <p className="text-gray-600">アカウントやアプリケーションの設定を管理</p>
+            <p className="text-gray-600">
+              アカウントやアプリケーションの設定を管理
+            </p>
           </div>
 
           {/* メインコンテンツ */}
           <div className="grid grid-cols-[280px_1fr] gap-6">
             {/* 設定タブナビゲーション */}
-            <SettingsNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+            <SettingsNavigation
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
 
             {/* コンテンツエリア */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm">{renderContent()}</div>
+            <div className="bg-white rounded-2xl p-8 shadow-sm">
+              {renderContent()}
+            </div>
           </div>
         </div>
       </div>
