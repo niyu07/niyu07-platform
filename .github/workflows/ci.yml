@@ -32,29 +32,33 @@ jobs:
       - name: パッケージをインストール
         run: npm ci
 
-      # 4. コードの見た目をチェック
+      # 4. Prisma クライアントを生成
+      - name: Prisma クライアントを生成
+        run: npx prisma generate
+
+      # 5. コードの見た目をチェック
       - name: コードの見た目をチェック (Prettier)
         run: npm run format:check
 
-      # 5. コードのミスをチェック
+      # 6. コードのミスをチェック
       - name: コードのミスをチェック (ESLint)
         run: npm run lint
 
-      # 6. 型のミスをチェック
+      # 7. 型のミスをチェック
       - name: 型のミスをチェック (TypeScript)
         run: npm run typecheck
 
-      # 7. テストを実行
+      # 8. テストを実行
       - name: テストを実行 (Vitest)
         run: npm run test
 
-      # 8. セキュリティチェック
+      # 9. セキュリティチェック
       - name: セキュリティチェック (npm audit)
         run: npm run audit
         # セキュリティの問題があっても続行する(警告として扱う)
         continue-on-error: true
 
-      # 9. ビルドできるか確認
+      # 10. ビルドできるか確認
       - name: ビルドできるか確認
         run: npm run build
 
