@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ユーザーモデル（将来的な拡張用）
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions         PomodoroSession[]
+  settings         PomodoroSettings?
+  dailyStats       DailyStats[]
+  categoryStats    CategoryStats[]
+  productivityData TimeSlotProductivity[]
+
+  @@map("users")
+}
+
+// ポモドーロセッション
+model PomodoroSession {
+  id               String   @id @default(cuid())
+  userId           String
+  startTime        DateTime
+  endTime          DateTime?
+  mode             String // '作業' | '休憩' | '長い休憩'
+  category         String // 'Coding' | 'Design' | 'Study' | 'Meeting' | 'Other'
+  durationMinutes  Int
+  completionStatus String // '完走' | '中断'
+  taskId           String? // タスク機能との連携用（オプション）
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startTime])
+  @@index([userId, category])
+  @@map("pomodoro_sessions")
+}
+
+// ポモドーロ設定
+model PomodoroSettings {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  workDuration         Int      @default(25) // 作業時間（分）
+  shortBreakDuration   Int      @default(5) // 短い休憩（分）
+  longBreakDuration    Int      @default(15) // 長い休憩（分）
+  sessionsUntilLongBreak Int    @default(4) // 長い休憩までのセッション数
+  dailyGoal            Int      @default(8) // 1日の目標セッション数
+  autoStartBreak       Boolean  @default(false)
+  autoStartWork        Boolean  @default(false)
+  soundEnabled         Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("pomodoro_settings")
+}
+
+// 日次統計
+model DailyStats {
+  id                String   @id @default(cuid())
+  userId            String
+  date              DateTime @unique
+  completedSessions Int      @default(0)
+  focusMinutes      Int      @default(0)
+  goalAchieved      Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryBreakdown CategoryBreakdown[]
+
+  @@index([userId, date])
+  @@map("daily_stats")
+}
+
+// カテゴリ別内訳（日次統計の詳細）
+model CategoryBreakdown {
+  id          String   @id @default(cuid())
+  dailyStatsId String
+  category    String
+  minutes     Int
+  createdAt   DateTime @default(now())
+
+  dailyStats DailyStats @relation(fields: [dailyStatsId], references: [id], onDelete: Cascade)
+
+  @@index([dailyStatsId])
+  @@map("category_breakdown")
+}
+
+// カテゴリ別統計（集計用）
+model CategoryStats {
+  id           String   @id @default(cuid())
+  userId       String
+  category     String
+  totalMinutes Int      @default(0)
+  sessionCount Int      @default(0)
+  weekStart    DateTime // 集計週の開始日
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category, weekStart])
+  @@index([userId, weekStart])
+  @@map("category_stats")
+}
+
+// 時間帯別生産性データ
+model TimeSlotProductivity {
+  id                    String   @id @default(cuid())
+  userId                String
+  timeSlot              String // '08-10' | '10-12' | '12-14' | '14-16' | '16-18' | '18-20'
+  dayOfWeek             Int // 0 (日曜) - 6 (土曜)
+  completedSessions     Int      @default(0)
+  completionRate        Int      @default(0) // パーセンテージ
+  averageFocusMinutes   Int      @default(0)
+  productivityScore     Int      @default(0) // 0-100
+  weekStart             DateTime // 集計週の開始日
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, timeSlot, dayOfWeek, weekStart])
+  @@index([userId, weekStart])
+  @@map("time_slot_productivity")
+}
