@@ -21,10 +21,12 @@ type TabType =
 
 interface AccountingDashboardProps {
   onNavigateToInput: (tab: TabType, transactionType?: '収入' | '経費') => void;
+  onNavigateToTab: (tab: TabType) => void;
 }
 
 export default function AccountingDashboard({
   onNavigateToInput,
+  onNavigateToTab,
 }: AccountingDashboardProps) {
   const [displayMode, setDisplayMode] = useState<DisplayMode>('利益');
   const [selectedYear, setSelectedYear] = useState<number>(2024);
@@ -224,13 +226,13 @@ export default function AccountingDashboard({
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-gray-900">最近の取引</h2>
-          <a
-            href="#"
+          <button
+            onClick={() => onNavigateToTab('取引一覧')}
             className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
           >
             すべて見る
             <span>→</span>
-          </a>
+          </button>
         </div>
 
         <div className="overflow-x-auto">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { AttendanceRecord, WorkLocation } from '../types';
 import {
   mockAttendanceRecords,
@@ -21,6 +22,7 @@ import { formatDateISO } from '../calendar/utils/dateUtils';
 type TabType = 'ダッシュボード' | '勤怠履歴' | '給与計算' | 'カレンダー連携';
 
 export default function AttendancePage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('ダッシュボード');
   const [attendanceRecords, setAttendanceRecords] = useState<
     AttendanceRecord[]
@@ -93,7 +95,12 @@ export default function AttendancePage() {
     );
     const transactions = exportSalaryToAccounting(summary);
     // 実際のアプリでは mockTransactions に追加する
-    alert(`${transactions.length}件の取引を会計システムに登録しました`);
+    if (
+      confirm(`${transactions.length}件の取引を会計システムに登録しますか？`)
+    ) {
+      // 会計ページに遷移
+      router.push('/accounting');
+    }
   };
 
   const renderContent = () => {

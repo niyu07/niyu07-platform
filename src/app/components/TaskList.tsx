@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Task, Priority } from '../types';
 import { useState } from 'react';
 
@@ -36,9 +37,6 @@ export default function TaskList({ tasks: initialTasks }: TaskListProps) {
     );
   };
 
-  const completedCount = tasks.filter((task) => task.completed).length;
-  const totalCount = tasks.length;
-
   // 優先度順、未完了優先でソート
   const sortedTasks = [...tasks].sort((a, b) => {
     if (a.completed !== b.completed) {
@@ -52,9 +50,13 @@ export default function TaskList({ tasks: initialTasks }: TaskListProps) {
     <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold text-gray-900">今日のタスク</h2>
-        <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-          {completedCount} / {totalCount}
-        </div>
+        <Link
+          href="/tasks"
+          className="text-xs text-blue-500 hover:text-blue-600 font-medium flex items-center gap-1"
+        >
+          すべて見る
+          <span>→</span>
+        </Link>
       </div>
 
       <div className="space-y-2 max-h-125 overflow-y-auto pr-1 custom-scrollbar">

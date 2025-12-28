@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { CalendarEvent, WorkLocation, AttendanceRecord } from '../../types';
 import { importAttendanceFromCalendar } from '../utils/calendarIntegration';
 
@@ -25,9 +26,18 @@ export default function CalendarImport({
 
   return (
     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">
-        カレンダーからインポート
-      </h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold text-gray-900">
+          カレンダーからインポート
+        </h2>
+        <Link
+          href="/calendar"
+          className="text-xs text-blue-500 hover:text-blue-600 font-medium flex items-center gap-1"
+        >
+          カレンダーを見る
+          <span>→</span>
+        </Link>
+      </div>
 
       <p className="text-gray-600 mb-6">
         カレンダーの勤務イベントを勤怠データとしてインポートできます。

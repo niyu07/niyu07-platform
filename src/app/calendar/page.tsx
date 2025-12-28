@@ -12,6 +12,7 @@ import EventForm from './components/EventForm';
 import CalendarSidePanel from './components/CalendarSidePanel';
 import TimeTableRegistration from './components/TimeTableRegistration';
 import SemesterSettings from './components/SemesterSettings';
+import EventDetailModal from './components/EventDetailModal';
 
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -25,6 +26,9 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date()
   ); // 初期表示で今日を選択
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | undefined>(
+    undefined
+  );
 
   // ナビゲーション処理
   const handlePrevious = () => {
@@ -91,8 +95,12 @@ export default function CalendarPage() {
 
   // イベントクリック
   const handleEventClick = (event: CalendarEvent) => {
-    // TODO: イベント詳細モーダルを表示
-    console.log('Event clicked:', event);
+    setSelectedEvent(event);
+  };
+
+  // イベント削除
+  const handleDeleteEvent = (eventId: string) => {
+    setEvents(events.filter((e) => e.id !== eventId));
   };
 
   // 時間割登録
@@ -205,6 +213,15 @@ export default function CalendarPage() {
         <SemesterSettings
           onClose={() => setShowSemesterSettings(false)}
           onSave={handleSaveSemesterSettings}
+        />
+      )}
+
+      {/* イベント詳細モーダル */}
+      {selectedEvent && (
+        <EventDetailModal
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(undefined)}
+          onDelete={handleDeleteEvent}
         />
       )}
     </div>

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { SummaryData } from '../types';
 
 interface SummaryCardsProps {
@@ -8,7 +9,10 @@ export default function SummaryCards({ data }: SummaryCardsProps) {
   return (
     <div className="grid grid-cols-4 gap-4">
       {/* 今日のタスク */}
-      <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+      <Link
+        href="/tasks"
+        className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+      >
         <div className="flex items-center gap-2 mb-3">
           <span className="text-lg">✓</span>
           <h3 className="text-xs font-medium text-gray-600">今日のタスク</h3>
@@ -30,10 +34,13 @@ export default function SummaryCards({ data }: SummaryCardsProps) {
         <div className="mt-1.5 text-right text-xs font-medium text-blue-500">
           {data.todayTasks.percentage}%
         </div>
-      </div>
+      </Link>
 
       {/* 今週の収入 */}
-      <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+      <Link
+        href="/accounting"
+        className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+      >
         <div className="flex items-center gap-2 mb-3">
           <span className="text-lg">💵</span>
           <h3 className="text-xs font-medium text-gray-600">今週の収入</h3>
@@ -49,10 +56,13 @@ export default function SummaryCards({ data }: SummaryCardsProps) {
             +{data.weeklyIncome.change}%
           </span>
         </div>
-      </div>
+      </Link>
 
       {/* 今日の学習 */}
-      <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+      <Link
+        href="/study-log"
+        className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+      >
         <div className="flex items-center gap-2 mb-3">
           <span className="text-lg">📚</span>
           <h3 className="text-xs font-medium text-gray-600">今日の学習</h3>
@@ -94,10 +104,13 @@ export default function SummaryCards({ data }: SummaryCardsProps) {
             </div>
           </div>
         </div>
-      </div>
+      </Link>
 
       {/* 扶養まで */}
-      <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+      <Link
+        href="/accounting"
+        className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+      >
         <div className="flex items-center gap-2 mb-3">
           <span className="text-lg">⚠️</span>
           <h3 className="text-xs font-medium text-gray-600">扶養まで</h3>
@@ -109,7 +122,7 @@ export default function SummaryCards({ data }: SummaryCardsProps) {
         </div>
         <div className="text-xs text-orange-500 font-medium">注意が必要</div>
         <div className="text-xs text-gray-500 mt-0.5">残り収入可能額</div>
-      </div>
+      </Link>
     </div>
   );
 }

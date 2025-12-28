@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { PomodoroData } from '../types';
 
 interface PomodoroChartProps {
@@ -9,7 +10,16 @@ export default function PomodoroChart({ data }: PomodoroChartProps) {
 
   return (
     <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-      <h2 className="text-lg font-bold text-gray-900 mb-2">今週のポモドーロ</h2>
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-lg font-bold text-gray-900">今週のポモドーロ</h2>
+        <Link
+          href="/pomodoro"
+          className="text-xs text-blue-500 hover:text-blue-600 font-medium flex items-center gap-1"
+        >
+          詳細を見る
+          <span>→</span>
+        </Link>
+      </div>
       <p className="text-xs text-gray-500 mb-4">集中時間の推移</p>
 
       <div className="space-y-2.5">

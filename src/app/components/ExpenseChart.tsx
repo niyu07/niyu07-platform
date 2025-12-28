@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { ExpenseData } from '../types';
 
 interface ExpenseChartProps {
@@ -48,7 +49,16 @@ export default function ExpenseChart({ data }: ExpenseChartProps) {
 
   return (
     <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-      <h2 className="text-lg font-bold text-gray-900 mb-1">今月の支出</h2>
+      <div className="flex items-center justify-between mb-1">
+        <h2 className="text-lg font-bold text-gray-900">今月の支出</h2>
+        <Link
+          href="/accounting"
+          className="text-xs text-blue-500 hover:text-blue-600 font-medium flex items-center gap-1"
+        >
+          詳細を見る
+          <span>→</span>
+        </Link>
+      </div>
       <p className="text-xs text-gray-500 mb-4">{data.period}</p>
 
       <div className="flex flex-col md:flex-row items-center gap-6">

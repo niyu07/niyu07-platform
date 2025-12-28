@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Sidebar from '../components/Sidebar';
 import { mockUser } from '../data/mockData';
 import TimerCard from './components/TimerCard';
@@ -12,9 +13,20 @@ import SessionHistory from './components/SessionHistory';
 import { usePomodoro } from './hooks/usePomodoro';
 import { mockPomodoroSettings, mockPomodoroDashboard } from './data/mockData';
 
-export default function PomodoroPage() {
+function PomodoroContent() {
+  const searchParams = useSearchParams();
   const [settings] = useState(mockPomodoroSettings);
   const [dashboard] = useState(mockPomodoroDashboard);
+
+  // タスクからの遷移時にタスク情報を取得（useMemoを使用してレンダリング時に計算）
+  const taskInfo = useMemo(() => {
+    const taskId = searchParams.get('taskId');
+    const taskTitle = searchParams.get('taskTitle');
+    if (taskId && taskTitle) {
+      return { taskId, taskTitle };
+    }
+    return null;
+  }, [searchParams]);
 
   const {
     timerState,
@@ -69,6 +81,14 @@ export default function PomodoroPage() {
           <p className="text-sm text-gray-600">
             集中力を高めて、生産性を最大化しましょう
           </p>
+          {taskInfo && (
+            <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-900">
+                <span className="font-semibold">タスク:</span>{' '}
+                {taskInfo.taskTitle}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* メインコンテンツエリア */}
@@ -117,5 +137,19 @@ export default function PomodoroPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PomodoroPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          読み込み中...
+        </div>
+      }
+    >
+      <PomodoroContent />
+    </Suspense>
   );
 }

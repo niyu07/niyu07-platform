@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { CalendarEvent, HourlyForecast, Suggestion } from '../types';
 import { getWeatherIcon } from '../utils';
 
@@ -27,9 +28,18 @@ export default function EventWeatherIntegration({
 
   return (
     <div className="bg-white rounded-2xl p-6 shadow-md space-y-4">
-      <div className="flex items-center gap-2">
-        <span className="text-xl">📅</span>
-        <h2 className="text-xl font-bold text-gray-800">今日の予定と天気</h2>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-xl">📅</span>
+          <h2 className="text-xl font-bold text-gray-800">今日の予定と天気</h2>
+        </div>
+        <Link
+          href="/calendar"
+          className="text-xs text-blue-500 hover:text-blue-600 font-medium flex items-center gap-1"
+        >
+          カレンダーを見る
+          <span>→</span>
+        </Link>
       </div>
 
       <div className="space-y-3">

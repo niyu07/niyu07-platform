@@ -41,11 +41,18 @@ export default function AccountingPage() {
     }
   };
 
+  const handleNavigateToTab = (tab: TabType) => {
+    setActiveTab(tab);
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'ダッシュボード':
         return (
-          <AccountingDashboard onNavigateToInput={handleNavigateToInput} />
+          <AccountingDashboard
+            onNavigateToInput={handleNavigateToInput}
+            onNavigateToTab={handleNavigateToTab}
+          />
         );
       case '取引入力':
         return <TransactionInput initialType={transactionType} />;
@@ -61,7 +68,10 @@ export default function AccountingPage() {
         return <Settings />;
       default:
         return (
-          <AccountingDashboard onNavigateToInput={handleNavigateToInput} />
+          <AccountingDashboard
+            onNavigateToInput={handleNavigateToInput}
+            onNavigateToTab={handleNavigateToTab}
+          />
         );
     }
   };

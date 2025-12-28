@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Task, TaskView, TaskFilter, TaskSort } from '../types';
 import { mockTaskManagementData, mockUser } from '../data/mockData';
 import Sidebar from '../components/Sidebar';
@@ -16,6 +17,7 @@ import {
 } from './utils/taskUtils';
 
 export default function TasksPage() {
+  const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>(mockTaskManagementData);
   const [currentView, setCurrentView] = useState<TaskView>('カンバン');
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
@@ -118,10 +120,15 @@ export default function TasksPage() {
 
   // タイマー開始（ポモドーロ連携）
   const handleStartTimer = (taskId: string) => {
-    alert(
-      `タスク ID: ${taskId} のタイマーを開始します。\n（ポモドーロタイマー機能と連携）`
-    );
-    console.log('Start pomodoro timer for task:', taskId);
+    const task = tasks.find((t) => t.id === taskId);
+    if (task) {
+      // タスク情報をクエリパラメータとして渡す
+      const params = new URLSearchParams({
+        taskId: task.id,
+        taskTitle: task.title,
+      });
+      router.push(`/pomodoro?${params.toString()}`);
+    }
   };
 
   // ビューアイコン

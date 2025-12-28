@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 export default function StudyLogForm() {
   const [category, setCategory] = useState('Programming');
@@ -63,12 +64,12 @@ export default function StudyLogForm() {
               placeholder="60"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
-            <button
-              type="button"
+            <Link
+              href="/pomodoro"
               className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-blue-500 hover:text-blue-600 font-medium"
             >
               タイマー引用
-            </button>
+            </Link>
           </div>
         </div>
 

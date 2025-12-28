@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Event, EventType } from '../types';
 import { useEffect, useState } from 'react';
 
@@ -72,10 +73,13 @@ export default function EventTimeline({ events }: EventTimelineProps) {
     <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold text-gray-900">今日の予定</h2>
-        <button className="text-blue-500 text-xs font-medium hover:text-blue-600 flex items-center gap-1">
+        <Link
+          href="/calendar"
+          className="text-blue-500 text-xs font-medium hover:text-blue-600 flex items-center gap-1"
+        >
           すべて見る
           <span>→</span>
-        </button>
+        </Link>
       </div>
 
       <div className="space-y-2.5 max-h-150 overflow-y-auto pr-2 custom-scrollbar">
