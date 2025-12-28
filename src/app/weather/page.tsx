@@ -60,6 +60,7 @@ export default function WeatherPage() {
   };
 
   const user = {
+    id: 'user-1',
     name: '山田太郎',
     email: 'yamada@example.com',
     avatar: '',

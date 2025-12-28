@@ -9,6 +9,7 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('account');
 
   const user = {
+    id: 'user-1',
     name: '山田太郎',
     email: 'yamada@example.com',
     avatar: '',
