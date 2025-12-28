@@ -55,6 +55,7 @@ const PREFECTURES = [
 
 export default function AccountSettings() {
   const [user, setUser] = useState<User>({
+    id: 'user-1',
     name: '山田太郎',
     email: 'yamada@example.com',
     avatar: '',

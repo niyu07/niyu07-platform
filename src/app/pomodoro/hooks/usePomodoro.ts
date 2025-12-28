@@ -7,9 +7,12 @@ import {
   PomodoroSession,
   DEFAULT_POMODORO_SETTINGS,
 } from '../types';
+import { saveSession } from '../lib/api';
 
 export function usePomodoro(
-  settings: PomodoroSettings = DEFAULT_POMODORO_SETTINGS
+  settings: PomodoroSettings = DEFAULT_POMODORO_SETTINGS,
+  onSessionComplete?: () => void,
+  userId?: string
 ) {
   const [timerState, setTimerState] = useState<PomodoroTimerState>({
     mode: '作業',
@@ -26,7 +29,7 @@ export function usePomodoro(
   const sessionStartTimeRef = useRef<string | null>(null);
 
   // タイマー完了時の処理
-  const handleTimerComplete = useCallback(() => {
+  const handleTimerComplete = useCallback(async () => {
     const { mode, currentCategory, currentCycle } = timerState;
 
     // セッション記録
@@ -42,6 +45,30 @@ export function usePomodoro(
         completionStatus: '完走',
       };
       setSessions((prev) => [session, ...prev]);
+
+      // DBに保存
+      try {
+        await saveSession({
+          userId: userId || 'user-1', // ログインユーザーIDを使用、フォールバックとして 'user-1'
+          mode,
+          category: currentCategory,
+          durationMinutes:
+            mode === '作業'
+              ? settings.workDuration
+              : settings.longBreakDuration,
+          completionStatus: '完走',
+          startTime: sessionStartTimeRef.current,
+          endTime: new Date().toISOString(),
+        });
+        console.log('✅ セッションをDBに保存しました');
+
+        // セッション完了コールバックを呼び出し
+        if (onSessionComplete) {
+          onSessionComplete();
+        }
+      } catch (error) {
+        console.error('❌ セッション保存エラー:', error);
+      }
     }
 
     // 通知
@@ -104,7 +131,7 @@ export function usePomodoro(
     } else {
       sessionStartTimeRef.current = null;
     }
-  }, [timerState, settings]);
+  }, [timerState, settings, onSessionComplete, userId]);
 
   // タイマーが終了したかチェック
   useEffect(() => {
@@ -194,25 +221,42 @@ export function usePomodoro(
   }, [timerState.mode, settings]);
 
   // スキップ
-  const skip = useCallback(() => {
+  const skip = useCallback(async () => {
     // 現在のセッションを中断として記録
     if (sessionStartTimeRef.current && timerState.mode === '作業') {
+      const actualDurationMinutes = Math.floor(
+        (settings.workDuration * 60 - timerState.remainingSeconds) / 60
+      );
       const session: PomodoroSession = {
         id: `session-${Date.now()}`,
         startTime: sessionStartTimeRef.current,
         endTime: new Date().toISOString(),
         mode: timerState.mode,
         category: timerState.currentCategory,
-        durationMinutes: Math.floor(
-          (settings.workDuration * 60 - timerState.remainingSeconds) / 60
-        ),
+        durationMinutes: actualDurationMinutes,
         completionStatus: '中断',
       };
       setSessions((prev) => [session, ...prev]);
+
+      // 中断されたセッションもDBに保存（オプション）
+      try {
+        await saveSession({
+          userId: userId || 'user-1', // ログインユーザーIDを使用、フォールバックとして 'user-1'
+          mode: timerState.mode,
+          category: timerState.currentCategory,
+          durationMinutes: actualDurationMinutes,
+          completionStatus: '中断',
+          startTime: sessionStartTimeRef.current,
+          endTime: new Date().toISOString(),
+        });
+        console.log('✅ 中断セッションをDBに保存しました');
+      } catch (error) {
+        console.error('❌ セッション保存エラー:', error);
+      }
     }
 
     handleTimerComplete();
-  }, [timerState, settings, handleTimerComplete]);
+  }, [timerState, settings, handleTimerComplete, userId]);
 
   // モード切り替え
   const changeMode = useCallback(

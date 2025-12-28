@@ -25,6 +25,7 @@ import {
 
 // モックユーザーデータ
 export const mockUser: User = {
+  id: 'mock-user-1',
   name: '山田太郎',
   email: 'yamada@example.com',
 };
