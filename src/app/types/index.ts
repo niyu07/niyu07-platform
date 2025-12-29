@@ -405,6 +405,8 @@ export interface CalendarEvent {
   };
   createdAt: string;
   updatedAt: string;
+  calendarId?: string; // Google Calendarのカレンダ ID
+  htmlLink?: string; // Google CalendarのWeb リンク
 }
 
 // 空き時間

@@ -183,32 +183,59 @@ export default function EventDetailModal({
         </div>
 
         {/* フッター */}
-        <div className="border-t border-gray-200 p-6 bg-gray-50 flex items-center justify-end gap-3">
-          {onDelete && (
+        <div className="border-t border-gray-200 p-6 bg-gray-50 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            {event.htmlLink && (
+              <a
+                href={event.htmlLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg font-medium transition-colors"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
+                </svg>
+                Google Calendarで開く
+              </a>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            {onDelete && (
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-medium transition-colors"
+              >
+                削除
+              </button>
+            )}
+            {onEdit && (
+              <button
+                onClick={() => {
+                  onEdit(event);
+                  onClose();
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              >
+                編集
+              </button>
+            )}
             <button
-              onClick={handleDelete}
-              className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-medium transition-colors"
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
             >
-              削除
+              閉じる
             </button>
-          )}
-          {onEdit && (
-            <button
-              onClick={() => {
-                onEdit(event);
-                onClose();
-              }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
-            >
-              編集
-            </button>
-          )}
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
-          >
-            閉じる
-          </button>
+          </div>
         </div>
       </div>
     </div>

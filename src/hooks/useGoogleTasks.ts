@@ -8,6 +8,7 @@ export interface GoogleTask {
   status: string;
   due?: string;
   updated: string;
+  completed?: string;
 }
 
 export interface GoogleTaskList {
@@ -33,11 +34,11 @@ export function useGoogleTasks(taskListId: string = '@default') {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch('/api/tasks/google?action=lists');
+      const response = await fetch('/api/tasks');
       if (!response.ok) throw new Error('Failed to fetch task lists');
 
       const data = await response.json();
-      setTaskLists(data);
+      setTaskLists(data.taskLists || []);
     } catch (err) {
       setError(err as Error);
       console.error('タスクリスト取得エラー:', err);
@@ -54,13 +55,16 @@ export function useGoogleTasks(taskListId: string = '@default') {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(
-        `/api/tasks/google?taskListId=${taskListId}`
-      );
+      const url =
+        taskListId === '@default' || taskListId === 'all'
+          ? '/api/tasks?all=true'
+          : `/api/tasks?taskListId=${taskListId}`;
+
+      const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch tasks');
 
       const data = await response.json();
-      setTasks(data);
+      setTasks(data.tasks || []);
     } catch (err) {
       setError(err as Error);
       console.error('タスク取得エラー:', err);
@@ -75,7 +79,7 @@ export function useGoogleTasks(taskListId: string = '@default') {
       if (status !== 'authenticated') return;
 
       try {
-        const response = await fetch('/api/tasks/google', {
+        const response = await fetch('/api/tasks', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...taskData, taskListId }),
@@ -83,7 +87,8 @@ export function useGoogleTasks(taskListId: string = '@default') {
 
         if (!response.ok) throw new Error('Failed to create task');
 
-        const newTask = await response.json();
+        const data = await response.json();
+        const newTask = data.task;
         setTasks((prev) => [newTask, ...prev]);
         return newTask;
       } catch (err) {
@@ -100,20 +105,26 @@ export function useGoogleTasks(taskListId: string = '@default') {
       if (status !== 'authenticated') return;
 
       try {
-        const response = await fetch('/api/tasks/google', {
-          method: 'PUT',
+        const response = await fetch('/api/tasks', {
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             taskId,
-            action: 'complete',
             taskListId,
           }),
         });
 
         if (!response.ok) throw new Error('Failed to complete task');
 
-        // ローカル状態から削除（完了したタスクは表示しない）
-        setTasks((prev) => prev.filter((t) => t.id !== taskId));
+        const data = await response.json();
+        const completedTask = data.task;
+
+        // タスクのステータスを更新
+        setTasks((prev) =>
+          prev.map((t) => (t.id === taskId ? completedTask : t))
+        );
+
+        return completedTask;
       } catch (err) {
         console.error('タスク完了エラー:', err);
         throw err;
@@ -158,6 +169,42 @@ export function useGoogleTasks(taskListId: string = '@default') {
     [status, taskListId]
   );
 
+  // タスクを更新
+  const updateTask = useCallback(
+    async (
+      taskId: string,
+      taskData: {
+        title?: string;
+        notes?: string;
+        due?: string;
+        status?: 'needsAction' | 'completed';
+      }
+    ) => {
+      if (status !== 'authenticated') return;
+
+      try {
+        const response = await fetch('/api/tasks', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ taskId, taskListId, ...taskData }),
+        });
+
+        if (!response.ok) throw new Error('Failed to update task');
+
+        const data = await response.json();
+        const updatedTask = data.task;
+        setTasks((prev) =>
+          prev.map((t) => (t.id === taskId ? updatedTask : t))
+        );
+        return updatedTask;
+      } catch (err) {
+        console.error('タスク更新エラー:', err);
+        throw err;
+      }
+    },
+    [status, taskListId]
+  );
+
   // タスクを削除
   const deleteTask = useCallback(
     async (taskId: string) => {
@@ -165,7 +212,7 @@ export function useGoogleTasks(taskListId: string = '@default') {
 
       try {
         const response = await fetch(
-          `/api/tasks/google?taskId=${taskId}&taskListId=${taskListId}`,
+          `/api/tasks?taskId=${taskId}&taskListId=${taskListId}`,
           {
             method: 'DELETE',
           }
@@ -198,6 +245,7 @@ export function useGoogleTasks(taskListId: string = '@default') {
     fetchTaskLists,
     fetchTasks,
     createTask,
+    updateTask,
     completeTask,
     addPomodoroInfo,
     deleteTask,

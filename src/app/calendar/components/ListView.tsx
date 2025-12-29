@@ -4,13 +4,19 @@ import { useState } from 'react';
 import { CalendarEvent, CalendarEventType } from '../../types';
 import { formatDate, parseISODate } from '../utils/dateUtils';
 import { getEventTypeColor, getEventTypeIcon } from '../utils/eventUtils';
+import { CalendarColorMap } from '@/hooks/useCalendarColors';
 
 interface ListViewProps {
   events: CalendarEvent[];
   onEventClick?: (event: CalendarEvent) => void;
+  calendarColors?: CalendarColorMap;
 }
 
-export default function ListView({ events, onEventClick }: ListViewProps) {
+export default function ListView({
+  events,
+  onEventClick,
+  calendarColors,
+}: ListViewProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<CalendarEventType | '全て'>(
     '全て'
@@ -131,6 +137,8 @@ export default function ListView({ events, onEventClick }: ListViewProps) {
                 {/* イベント */}
                 <div className="space-y-3">
                   {dayEvents.map((event) => {
+                    const calendarColor =
+                      event.calendarId && calendarColors?.[event.calendarId];
                     const colors = getEventTypeColor(event.type);
                     const icon = getEventTypeIcon(event.type);
 
@@ -138,7 +146,12 @@ export default function ListView({ events, onEventClick }: ListViewProps) {
                       <div
                         key={event.id}
                         onClick={() => onEventClick?.(event)}
-                        className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+                        className="bg-white rounded-xl p-5 shadow-sm border-l-4 border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+                        style={
+                          calendarColor
+                            ? { borderLeftColor: calendarColor }
+                            : undefined
+                        }
                       >
                         <div className="flex items-start gap-4">
                           {/* アイコンと時刻 */}
@@ -160,7 +173,12 @@ export default function ListView({ events, onEventClick }: ListViewProps) {
                                 {event.title}
                               </h4>
                               <span
-                                className={`text-xs px-2 py-1 rounded ${colors.bg} ${colors.text}`}
+                                className={`text-xs px-2 py-1 rounded ${calendarColor ? 'text-white' : `${colors.bg} ${colors.text}`}`}
+                                style={
+                                  calendarColor
+                                    ? { backgroundColor: calendarColor }
+                                    : undefined
+                                }
                               >
                                 {event.type}
                               </span>

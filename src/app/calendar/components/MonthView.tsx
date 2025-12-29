@@ -8,17 +8,20 @@ import {
   isSameMonth,
 } from '../utils/dateUtils';
 import { getEventTypeBgColor } from '../utils/eventUtils';
+import { CalendarColorMap } from '@/hooks/useCalendarColors';
 
 interface MonthViewProps {
   currentDate: Date;
   events: CalendarEvent[];
   onDateClick: (date: Date) => void;
+  calendarColors?: CalendarColorMap;
 }
 
 export default function MonthView({
   currentDate,
   events,
   onDateClick,
+  calendarColors,
 }: MonthViewProps) {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -93,11 +96,20 @@ export default function MonthView({
                   {/* イベント一覧（最大3件まで表示） */}
                   <div className="space-y-1">
                     {dateEvents.slice(0, 3).map((event) => {
-                      const bgColor = getEventTypeBgColor(event.type);
+                      const calendarColor =
+                        event.calendarId && calendarColors?.[event.calendarId];
+                      const bgColor = calendarColor
+                        ? ''
+                        : getEventTypeBgColor(event.type);
                       return (
                         <div
                           key={event.id}
                           className={`text-xs px-2 py-1 rounded text-white truncate ${bgColor}`}
+                          style={
+                            calendarColor
+                              ? { backgroundColor: calendarColor }
+                              : undefined
+                          }
                           title={`${event.startTime} ${event.title}`}
                         >
                           {event.startTime} {event.title.substring(0, 10)}

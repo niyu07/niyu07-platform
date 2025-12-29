@@ -7,12 +7,14 @@ import {
   formatMinutesToHourMinute,
 } from '../utils/dateUtils';
 import { getEventTypeColor, getEventTypeIcon } from '../utils/eventUtils';
+import { CalendarColorMap } from '@/hooks/useCalendarColors';
 
 interface DayViewProps {
   currentDate: Date;
   events: CalendarEvent[];
   workingHours: { start: string; end: string };
   onEventClick?: (event: CalendarEvent) => void;
+  calendarColors?: CalendarColorMap;
 }
 
 export default function DayView({
@@ -20,6 +22,7 @@ export default function DayView({
   events,
   workingHours,
   onEventClick,
+  calendarColors,
 }: DayViewProps) {
   const summary = generateDayScheduleSummary(events, currentDate, workingHours);
 
@@ -54,6 +57,8 @@ export default function DayView({
                   {summary.events
                     .sort((a, b) => a.startTime.localeCompare(b.startTime))
                     .map((event) => {
+                      const calendarColor =
+                        event.calendarId && calendarColors?.[event.calendarId];
                       const colors = getEventTypeColor(event.type);
                       const icon = getEventTypeIcon(event.type);
 
@@ -61,38 +66,51 @@ export default function DayView({
                         <div
                           key={event.id}
                           onClick={() => onEventClick?.(event)}
-                          className={`${colors.bg} ${colors.border} border-l-4 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow`}
+                          className={`${calendarColor ? 'bg-white' : colors.bg} ${calendarColor ? '' : colors.border} border-l-4 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow`}
+                          style={
+                            calendarColor
+                              ? {
+                                  backgroundColor: calendarColor + '20',
+                                  borderLeftColor: calendarColor,
+                                }
+                              : undefined
+                          }
                         >
                           <div className="flex items-start gap-3">
                             <span className="text-2xl">{icon}</span>
                             <div className="flex-1">
                               <div className="flex items-center justify-between mb-1">
                                 <span
-                                  className={`text-sm font-semibold ${colors.text}`}
+                                  className={`text-sm font-semibold ${calendarColor ? 'text-gray-900' : colors.text}`}
                                 >
                                   {event.startTime} - {event.endTime}
                                 </span>
                                 <span
-                                  className={`text-xs px-2 py-1 rounded ${colors.bg} ${colors.text}`}
+                                  className={`text-xs px-2 py-1 rounded ${calendarColor ? 'text-white' : `${colors.bg} ${colors.text}`}`}
+                                  style={
+                                    calendarColor
+                                      ? { backgroundColor: calendarColor }
+                                      : undefined
+                                  }
                                 >
                                   {event.type}
                                 </span>
                               </div>
                               <h4
-                                className={`text-base font-bold ${colors.text} mb-2`}
+                                className={`text-base font-bold ${calendarColor ? 'text-gray-900' : colors.text} mb-2`}
                               >
                                 {event.title}
                               </h4>
                               {event.location && (
                                 <div
-                                  className={`text-sm ${colors.text} opacity-75 mb-1`}
+                                  className={`text-sm ${calendarColor ? 'text-gray-600' : colors.text} opacity-75 mb-1`}
                                 >
                                   📍 {event.location}
                                 </div>
                               )}
                               {event.memo && (
                                 <div
-                                  className={`text-sm ${colors.text} opacity-75`}
+                                  className={`text-sm ${calendarColor ? 'text-gray-600' : colors.text} opacity-75`}
                                 >
                                   💭 {event.memo}
                                 </div>
@@ -102,7 +120,7 @@ export default function DayView({
                                   {event.tags.map((tag) => (
                                     <span
                                       key={tag}
-                                      className={`text-xs px-2 py-0.5 rounded-full bg-white ${colors.text}`}
+                                      className={`text-xs px-2 py-0.5 rounded-full ${calendarColor ? 'bg-gray-100 text-gray-700' : `bg-white ${colors.text}`}`}
                                     >
                                       #{tag}
                                     </span>

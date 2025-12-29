@@ -2,8 +2,16 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { Task, TaskView, TaskFilter, TaskSort } from '../types';
-import { mockTaskManagementData, mockUser } from '../data/mockData';
+import { mockUser } from '../data/mockData';
+import { useGoogleTasks } from '@/hooks/useGoogleTasks';
+import {
+  convertGoogleTasksToAppTasks,
+  convertAppTaskToGoogleTaskCreate,
+  convertAppTaskToGoogleTaskUpdate,
+} from './utils/googleTasksAdapter';
 import Sidebar from '../components/Sidebar';
 import KanbanView from './components/KanbanView';
 import ListView from './components/ListView';
@@ -18,7 +26,15 @@ import {
 
 export default function TasksPage() {
   const router = useRouter();
-  const [tasks, setTasks] = useState<Task[]>(mockTaskManagementData);
+  const { status: authStatus } = useSession();
+  const {
+    tasks: googleTasks,
+    isLoading,
+    error,
+    createTask: createGoogleTask,
+    updateTask: updateGoogleTask,
+    deleteTask: deleteGoogleTask,
+  } = useGoogleTasks('@default');
   const [currentView, setCurrentView] = useState<TaskView>('カンバン');
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
@@ -29,6 +45,12 @@ export default function TasksPage() {
   });
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [showSortMenu, setShowSortMenu] = useState(false);
+
+  // Google Tasksのデータをアプリのタスク形式に変換
+  const tasks = useMemo(
+    () => convertGoogleTasksToAppTasks(googleTasks),
+    [googleTasks]
+  );
 
   // フィルタ・ソート適用
   const processedTasks = useMemo(() => {
@@ -52,70 +74,62 @@ export default function TasksPage() {
   }, [tasks]);
 
   // タスク作成
-  const handleCreateTask = (
+  const handleCreateTask = async (
     taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>
   ) => {
-    const newTask: Task = {
-      ...taskData,
-      id: `task-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setTasks([...tasks, newTask]);
+    try {
+      const googleTaskData = convertAppTaskToGoogleTaskCreate(taskData);
+      await createGoogleTask(googleTaskData);
+      setShowNewTaskForm(false);
+    } catch (error) {
+      console.error('タスク作成エラー:', error);
+      alert('タスクの作成に失敗しました');
+    }
   };
 
   // タスク更新
-  const handleUpdateTask = (
+  const handleUpdateTask = async (
     taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>
   ) => {
     if (!editingTask) return;
 
-    const updatedTask: Task = {
-      ...taskData,
-      id: editingTask.id,
-      createdAt: editingTask.createdAt,
-      updatedAt: new Date().toISOString(),
-    };
-    setTasks(tasks.map((t) => (t.id === editingTask.id ? updatedTask : t)));
-    setEditingTask(undefined);
+    try {
+      const googleTaskData = convertAppTaskToGoogleTaskUpdate(taskData);
+      await updateGoogleTask(editingTask.id, googleTaskData);
+      setEditingTask(undefined);
+      setShowNewTaskForm(false);
+    } catch (error) {
+      console.error('タスク更新エラー:', error);
+      alert('タスクの更新に失敗しました');
+    }
   };
 
   // タスク削除
-  const handleDeleteTask = (taskId: string) => {
+  const handleDeleteTask = async (taskId: string) => {
     if (confirm('このタスクを削除しますか?')) {
-      setTasks(tasks.filter((t) => t.id !== taskId));
+      try {
+        await deleteGoogleTask(taskId);
+      } catch (error) {
+        console.error('タスク削除エラー:', error);
+        alert('タスクの削除に失敗しました');
+      }
     }
   };
 
   // ステータス変更
-  const handleStatusChange = (taskId: string, newStatus: Task['status']) => {
-    setTasks(
-      tasks.map((t) => {
-        if (t.id === taskId) {
-          const updatedTask = {
-            ...t,
-            status: newStatus,
-            updatedAt: new Date().toISOString(),
-          };
-          // 完了時の処理
-          if (newStatus === '完了') {
-            updatedTask.completedAt = new Date().toISOString();
-            // 期限チェック
-            if (t.dueDate) {
-              const today = new Date();
-              today.setHours(0, 0, 0, 0);
-              const dueDate = new Date(t.dueDate);
-              dueDate.setHours(0, 0, 0, 0);
-              if (today > dueDate) {
-                updatedTask.isOverdue = true;
-              }
-            }
-          }
-          return updatedTask;
-        }
-        return t;
-      })
-    );
+  const handleStatusChange = async (
+    taskId: string,
+    newStatus: Task['status']
+  ) => {
+    try {
+      const googleTaskData = convertAppTaskToGoogleTaskUpdate({
+        status: newStatus,
+      });
+      await updateGoogleTask(taskId, googleTaskData);
+    } catch (error) {
+      console.error('ステータス更新エラー:', error);
+      alert('ステータスの更新に失敗しました');
+    }
   };
 
   // タイマー開始（ポモドーロ連携）
@@ -143,6 +157,32 @@ export default function TasksPage() {
     }
   };
 
+  // 認証チェック
+  if (authStatus === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">読み込み中...</div>
+      </div>
+    );
+  }
+
+  if (authStatus === 'unauthenticated') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">認証が必要です</h1>
+          <p className="mb-4">Google Tasksを使用するにはログインしてください</p>
+          <Link
+            href="/api/auth/signin"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 inline-block"
+          >
+            ログイン
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar user={mockUser} currentPage="タスク" />
@@ -150,11 +190,21 @@ export default function TasksPage() {
       <div className="ml-64 p-8">
         {/* ヘッダー */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">タスク管理</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            タスク管理{' '}
+            {isLoading && (
+              <span className="text-sm text-gray-500">(読み込み中...)</span>
+            )}
+          </h1>
           <div className="text-sm text-gray-600">
             全 {summary.total}件 | 完了 {summary.completed}件 | 残り{' '}
             {summary.remaining}件
           </div>
+          {error && (
+            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+              エラー: {error.message}
+            </div>
+          )}
         </div>
 
         {/* 操作バー */}
@@ -209,7 +259,8 @@ export default function TasksPage() {
               {/* 新規タスク */}
               <button
                 onClick={() => setShowNewTaskForm(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
               >
                 <span>+</span>
                 <span className="text-sm font-medium">新規タスク</span>

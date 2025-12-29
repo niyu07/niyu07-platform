@@ -10,17 +10,20 @@ import {
   timeToMinutes,
 } from '../utils/dateUtils';
 import { getEventTypeColor } from '../utils/eventUtils';
+import { CalendarColorMap } from '@/hooks/useCalendarColors';
 
 interface WeekViewProps {
   currentDate: Date;
   events: CalendarEvent[];
   onEventClick?: (event: CalendarEvent) => void;
+  calendarColors?: CalendarColorMap;
 }
 
 export default function WeekView({
   currentDate,
   events,
   onEventClick,
+  calendarColors,
 }: WeekViewProps) {
   const weekStart = getWeekStart(currentDate);
   const week = generateWeek(weekStart);
@@ -112,26 +115,39 @@ export default function WeekView({
                 {/* イベント */}
                 {dateEvents.map((event) => {
                   const style = getEventStyle(event);
+                  const calendarColor =
+                    event.calendarId && calendarColors?.[event.calendarId];
                   const colors = getEventTypeColor(event.type);
 
                   return (
                     <div
                       key={event.id}
                       onClick={() => onEventClick?.(event)}
-                      className={`absolute left-1 right-1 ${colors.bg} ${colors.border} border-l-4 rounded px-2 py-1 cursor-pointer hover:shadow-md transition-shadow overflow-hidden`}
-                      style={style}
+                      className={`absolute left-1 right-1 ${calendarColor ? 'bg-white' : colors.bg} ${calendarColor ? '' : colors.border} border-l-4 rounded px-2 py-1 cursor-pointer hover:shadow-md transition-shadow overflow-hidden`}
+                      style={{
+                        ...style,
+                        ...(calendarColor
+                          ? {
+                              backgroundColor: calendarColor + '20',
+                              borderLeftColor: calendarColor,
+                            }
+                          : {}),
+                      }}
                     >
-                      <div className={`text-xs font-semibold ${colors.text}`}>
+                      <div
+                        className={`text-xs font-semibold ${calendarColor ? '' : colors.text}`}
+                        style={calendarColor ? { color: calendarColor } : {}}
+                      >
                         {event.startTime}
                       </div>
                       <div
-                        className={`text-sm font-medium ${colors.text} truncate`}
+                        className={`text-sm font-medium ${calendarColor ? 'text-gray-900' : colors.text} truncate`}
                       >
                         {event.title}
                       </div>
                       {event.location && (
                         <div
-                          className={`text-xs ${colors.text} opacity-75 truncate`}
+                          className={`text-xs ${calendarColor ? 'text-gray-600' : colors.text} opacity-75 truncate`}
                         >
                           📍 {event.location}
                         </div>

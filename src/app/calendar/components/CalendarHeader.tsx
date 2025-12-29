@@ -12,6 +12,7 @@ interface CalendarHeaderProps {
   onToday: () => void;
   onAddEvent: () => void;
   onOpenSettings?: () => void;
+  onOpenCalendarSelector?: () => void;
 }
 
 export default function CalendarHeader({
@@ -23,6 +24,7 @@ export default function CalendarHeader({
   onToday,
   onAddEvent,
   onOpenSettings,
+  onOpenCalendarSelector,
 }: CalendarHeaderProps) {
   const views: CalendarView[] = ['月', '週', '日', 'リスト'];
 
@@ -103,6 +105,28 @@ export default function CalendarHeader({
               </button>
             ))}
           </div>
+
+          {/* カレンダー選択ボタン */}
+          <button
+            onClick={onOpenCalendarSelector}
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="カレンダー選択"
+            title="カレンダー選択"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+          </button>
 
           {/* 設定ボタン */}
           <button
