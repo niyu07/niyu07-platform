@@ -56,7 +56,9 @@ export function convertGoogleTaskToAppTask(googleTask: GoogleTask): Task {
 /**
  * アプリのTaskをGoogle Taskの作成データに変換
  */
-export function convertAppTaskToGoogleTaskCreate(task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>): {
+export function convertAppTaskToGoogleTaskCreate(
+  task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>
+): {
   title: string;
   notes?: string;
   due?: string;
@@ -133,6 +135,8 @@ export function convertAppTaskToGoogleTaskUpdate(task: Partial<Task>): {
 /**
  * 複数のGoogle TasksをアプリのTask配列に変換
  */
-export function convertGoogleTasksToAppTasks(googleTasks: GoogleTask[]): Task[] {
+export function convertGoogleTasksToAppTasks(
+  googleTasks: GoogleTask[]
+): Task[] {
   return googleTasks.map(convertGoogleTaskToAppTask);
 }

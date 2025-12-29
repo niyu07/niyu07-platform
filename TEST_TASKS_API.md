@@ -3,6 +3,7 @@
 ## テスト準備
 
 開発サーバーが起動していることを確認してください:
+
 ```bash
 npm run dev
 # http://localhost:3000
@@ -21,12 +22,14 @@ npm run dev
 以下のAPIエンドポイントをテストします:
 
 #### A. タスクリスト取得
+
 ```bash
 curl -X GET http://localhost:3000/api/tasks \
   -H "Cookie: next-auth.session-token=YOUR_SESSION_TOKEN"
 ```
 
 期待される結果:
+
 ```json
 {
   "taskLists": [
@@ -39,12 +42,14 @@ curl -X GET http://localhost:3000/api/tasks \
 ```
 
 #### B. すべてのタスク取得
+
 ```bash
 curl -X GET "http://localhost:3000/api/tasks?all=true" \
   -H "Cookie: next-auth.session-token=YOUR_SESSION_TOKEN"
 ```
 
 期待される結果:
+
 ```json
 {
   "tasks": [
@@ -60,6 +65,7 @@ curl -X GET "http://localhost:3000/api/tasks?all=true" \
 ```
 
 #### C. タスク作成
+
 ```bash
 curl -X POST http://localhost:3000/api/tasks \
   -H "Content-Type: application/json" \
@@ -72,6 +78,7 @@ curl -X POST http://localhost:3000/api/tasks \
 ```
 
 期待される結果:
+
 ```json
 {
   "task": {
@@ -84,6 +91,7 @@ curl -X POST http://localhost:3000/api/tasks \
 ```
 
 #### D. タスク更新
+
 ```bash
 curl -X PUT http://localhost:3000/api/tasks \
   -H "Content-Type: application/json" \
@@ -96,6 +104,7 @@ curl -X PUT http://localhost:3000/api/tasks \
 ```
 
 #### E. タスク完了
+
 ```bash
 curl -X PATCH http://localhost:3000/api/tasks \
   -H "Content-Type: application/json" \
@@ -106,12 +115,14 @@ curl -X PATCH http://localhost:3000/api/tasks \
 ```
 
 #### F. タスク削除
+
 ```bash
 curl -X DELETE "http://localhost:3000/api/tasks?taskId=YOUR_TASK_ID" \
   -H "Cookie: next-auth.session-token=YOUR_SESSION_TOKEN"
 ```
 
 期待される結果:
+
 ```json
 {
   "success": true
@@ -143,15 +154,18 @@ curl -X DELETE "http://localhost:3000/api/tasks?taskId=YOUR_TASK_ID" \
 ## トラブルシューティング
 
 ### エラー: "Google認証情報が見つかりません"
+
 - ログインしているか確認
 - Google OAuth設定が正しいか確認
 - `.env`ファイルに`GOOGLE_CLIENT_ID`と`GOOGLE_CLIENT_SECRET`が設定されているか確認
 
 ### エラー: "Failed to fetch tasks"
+
 - Google Tasks APIが有効になっているか確認（Google Cloud Console）
 - 認証スコープに`https://www.googleapis.com/auth/tasks`が含まれているか確認
 - データベースにアクセストークンが保存されているか確認
 
 ### エラー: 401 Unauthorized
+
 - セッションが有効か確認
 - 再ログインしてみる

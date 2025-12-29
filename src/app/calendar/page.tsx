@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
-import { CalendarView, CalendarEvent, Semester, Holiday, Task } from '../types';
+import { CalendarView, CalendarEvent, Semester, Holiday } from '../types';
 import { mockCalendarSettings } from '../data/mockData';
 import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
 import { useGoogleTasks } from '@/hooks/useGoogleTasks';
@@ -33,11 +33,7 @@ export default function CalendarPage() {
     deleteEvent: deleteGoogleEvent,
   } = useGoogleCalendar();
 
-  const {
-    tasks: googleTasks,
-    isLoading: tasksLoading,
-    fetchTasks,
-  } = useGoogleTasks('@default');
+  const { tasks: googleTasks } = useGoogleTasks('@default');
 
   const { colorMap, setCalendarColor, assignDefaultColors, DEFAULT_COLORS } =
     useCalendarColors();
@@ -46,8 +42,6 @@ export default function CalendarPage() {
   const [view, setView] = useState<CalendarView>(
     mockCalendarSettings.defaultView
   );
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [showEventForm, setShowEventForm] = useState(false);
   const [showTimeTableForm, setShowTimeTableForm] = useState(false);
   const [showSemesterSettings, setShowSemesterSettings] = useState(false);
@@ -60,15 +54,15 @@ export default function CalendarPage() {
   );
 
   // Google Tasksのデータをアプリのタスク形式に変換
-  useEffect(() => {
-    const convertedTasks = convertGoogleTasksToAppTasks(googleTasks);
-    setTasks(convertedTasks);
-  }, [googleTasks]);
+  const convertedTasks = useMemo(
+    () => convertGoogleTasksToAppTasks(googleTasks),
+    [googleTasks]
+  );
 
-  // Google Calendarのイベントをローカル状態に同期し、タスクの締め切りを追加
-  useEffect(() => {
-    // Google Calendarのイベントにタスクの締め切りを追加
-    const taskDeadlines: CalendarEvent[] = tasks
+  // Google Calendarのイベントとタスクの締め切りを統合
+  const events = useMemo(() => {
+    // タスクの締め切りをイベントとして追加
+    const taskDeadlines: CalendarEvent[] = convertedTasks
       .filter((task) => task.dueDate && task.status !== '完了')
       .map((task) => {
         // YYYY/MM/DD形式をYYYY-MM-DD形式に変換
@@ -81,15 +75,15 @@ export default function CalendarPage() {
           date: isoDate,
           startTime: '00:00',
           endTime: '23:59',
-          type: 'task' as any, // タスク専用タイプ（後で型定義を更新）
+          type: 'task' as CalendarEvent['type'], // タスク専用タイプ
           memo: task.description,
           createdAt: task.createdAt,
           updatedAt: task.updatedAt,
         };
       });
 
-    setEvents([...googleEvents, ...taskDeadlines]);
-  }, [googleEvents, tasks]);
+    return [...googleEvents, ...taskDeadlines];
+  }, [googleEvents, convertedTasks]);
 
   // 初回マウント時にカレンダーリストを取得
   useEffect(() => {
@@ -237,17 +231,28 @@ export default function CalendarPage() {
     setShowTimeTableForm(true);
   };
 
-  const handleSaveTimeTable = (
+  const handleSaveTimeTable = async (
     eventDataList: Omit<CalendarEvent, 'id' | 'createdAt' | 'updatedAt'>[]
   ) => {
-    const newEvents = eventDataList.map((eventData) => ({
-      ...eventData,
-      id: `cal-${Date.now()}-${Math.random()}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }));
-    setEvents([...events, ...newEvents]);
-    setShowTimeTableForm(false);
+    try {
+      // 各イベントをGoogle Calendarに作成
+      for (const eventData of eventDataList) {
+        const startDateTime = `${eventData.date}T${eventData.startTime}:00`;
+        const endDateTime = `${eventData.date}T${eventData.endTime}:00`;
+
+        await createEvent({
+          summary: eventData.title,
+          description: eventData.memo,
+          start: { dateTime: startDateTime },
+          end: { dateTime: endDateTime },
+          location: eventData.location,
+        });
+      }
+      setShowTimeTableForm(false);
+    } catch (error) {
+      console.error('時間割作成エラー:', error);
+      alert('時間割の作成に失敗しました');
+    }
   };
 
   // 学期・休暇設定
@@ -339,7 +344,7 @@ export default function CalendarPage() {
             selectedDate={selectedDate}
             currentDate={currentDate}
             events={events}
-            tasks={tasks}
+            tasks={convertedTasks}
             workingHours={mockCalendarSettings.workingHours}
             onOpenTimeTable={handleOpenTimeTable}
             calendarColors={colorMap}

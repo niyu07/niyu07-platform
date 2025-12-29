@@ -3,6 +3,7 @@
 ## 現状分析
 
 ### 1. カレンダー（✅ 完了）
+
 - **状態**: Google Calendar APIと連携済み
 - **ファイル**:
   - `src/lib/google-calendar.ts` - API連携ロジック
@@ -11,6 +12,7 @@
 - **機能**: イベント取得・作成・更新・削除が実装済み
 
 ### 2. タスク（TODO）（🔄 要対応）
+
 - **状態**: モックデータ使用中
 - **ファイル**: `src/app/tasks/page.tsx`
 - **モックデータ**: `mockTaskManagementData` from `src/app/data/mockData`
@@ -20,6 +22,7 @@
   - [ ] モックデータからGoogle Tasks APIへの移行
 
 ### 3. 天気（🔄 要対応）
+
 - **状態**: モックデータ使用中
 - **ファイル**: `src/app/weather/page.tsx`
 - **モックデータ**:
@@ -37,6 +40,7 @@
   - [ ] モックデータから実APIへの移行
 
 ### 4. 勤怠管理（🔄 要対応）
+
 - **状態**: モックデータ使用中
 - **ファイル**: `src/app/attendance/page.tsx`
 - **モックデータ**:
@@ -49,6 +53,7 @@
   - [ ] モックデータからDB保存への移行
 
 ### 5. 会計管理（🔄 要対応）
+
 - **状態**: モックデータ使用中（コンポーネント内）
 - **ファイル**: `src/app/accounting/page.tsx`
 - **必要な作業**:
@@ -61,18 +66,21 @@
 ## 実装優先順位
 
 ### Phase 1: タスク管理（Google Tasks API）
+
 1. Google Tasks API認証設定
 2. APIエンドポイント作成
 3. フロントエンド連携
 4. モックデータ削除
 
 ### Phase 2: 天気（Weather API）
+
 1. Weather API選定（OpenWeatherMap推奨）
 2. APIエンドポイント作成
 3. フロントエンド連携
 4. カレンダー連携テスト
 
 ### Phase 3: 勤怠・会計（データベース保存）
+
 1. Prismaスキーマ拡張
 2. API作成
 3. フロントエンド連携
@@ -83,14 +91,17 @@
 ## 質問事項
 
 ### タスク管理について
+
 - Google Tasks APIを使用する？それとも別のタスク管理API？
 - Google Calendarのイベントとタスクの同期が必要？
 
 ### 天気APIについて
+
 - OpenWeatherMap（無料プランあり）を使用する？
 - 他の天気APIの希望は？
 
 ### 勤怠・会計について
+
 - データベースに保存する形で問題ない？
 - 外部サービス連携の希望は？（例: freee, Money Forward等）
 
@@ -115,6 +126,7 @@
 ## 実装手順
 
 ### Phase 1: Google Tasks API
+
 1. ✅ 実装計画確定
 2. 🔄 Google Tasks APIの認証スコープ追加
 3. 🔄 `src/lib/google-tasks.ts` 作成
@@ -124,6 +136,7 @@
 7. 🔄 モックデータ削除
 
 ### Phase 2: OpenWeatherMap API
+
 1. 🔄 OpenWeatherMap APIキー取得
 2. 🔄 `src/lib/weather-api.ts` 作成
 3. 🔄 API エンドポイント作成 (`src/app/api/weather/`)
@@ -131,6 +144,7 @@
 5. 🔄 モックデータ削除
 
 ### Phase 3: 勤怠・会計データベース保存
+
 1. 🔄 Prismaスキーマ拡張 (勤怠記録)
 2. 🔄 Prismaスキーマ拡張 (会計取引)
 3. 🔄 勤怠API作成

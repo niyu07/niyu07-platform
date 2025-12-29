@@ -8,6 +8,7 @@ export interface GoogleTask {
   status: string;
   due?: string;
   updated: string;
+  completed?: string;
 }
 
 export interface GoogleTaskList {
@@ -54,9 +55,10 @@ export function useGoogleTasks(taskListId: string = '@default') {
       setIsLoading(true);
       setError(null);
 
-      const url = taskListId === '@default' || taskListId === 'all'
-        ? '/api/tasks?all=true'
-        : `/api/tasks?taskListId=${taskListId}`;
+      const url =
+        taskListId === '@default' || taskListId === 'all'
+          ? '/api/tasks?all=true'
+          : `/api/tasks?taskListId=${taskListId}`;
 
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch tasks');

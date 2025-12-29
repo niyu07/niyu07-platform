@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { Task, TaskView, TaskFilter, TaskSort } from '../types';
 import { mockUser } from '../data/mockData';
@@ -25,18 +26,15 @@ import {
 
 export default function TasksPage() {
   const router = useRouter();
-  const { data: session, status: authStatus } = useSession();
+  const { status: authStatus } = useSession();
   const {
     tasks: googleTasks,
     isLoading,
     error,
-    fetchTasks,
     createTask: createGoogleTask,
     updateTask: updateGoogleTask,
     deleteTask: deleteGoogleTask,
   } = useGoogleTasks('@default');
-
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [currentView, setCurrentView] = useState<TaskView>('カンバン');
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
@@ -49,10 +47,10 @@ export default function TasksPage() {
   const [showSortMenu, setShowSortMenu] = useState(false);
 
   // Google Tasksのデータをアプリのタスク形式に変換
-  useEffect(() => {
-    const convertedTasks = convertGoogleTasksToAppTasks(googleTasks);
-    setTasks(convertedTasks);
-  }, [googleTasks]);
+  const tasks = useMemo(
+    () => convertGoogleTasksToAppTasks(googleTasks),
+    [googleTasks]
+  );
 
   // フィルタ・ソート適用
   const processedTasks = useMemo(() => {
@@ -119,9 +117,14 @@ export default function TasksPage() {
   };
 
   // ステータス変更
-  const handleStatusChange = async (taskId: string, newStatus: Task['status']) => {
+  const handleStatusChange = async (
+    taskId: string,
+    newStatus: Task['status']
+  ) => {
     try {
-      const googleTaskData = convertAppTaskToGoogleTaskUpdate({ status: newStatus });
+      const googleTaskData = convertAppTaskToGoogleTaskUpdate({
+        status: newStatus,
+      });
       await updateGoogleTask(taskId, googleTaskData);
     } catch (error) {
       console.error('ステータス更新エラー:', error);
@@ -169,12 +172,12 @@ export default function TasksPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">認証が必要です</h1>
           <p className="mb-4">Google Tasksを使用するにはログインしてください</p>
-          <a
+          <Link
             href="/api/auth/signin"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 inline-block"
           >
             ログイン
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -188,7 +191,10 @@ export default function TasksPage() {
         {/* ヘッダー */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            タスク管理 {isLoading && <span className="text-sm text-gray-500">(読み込み中...)</span>}
+            タスク管理{' '}
+            {isLoading && (
+              <span className="text-sm text-gray-500">(読み込み中...)</span>
+            )}
           </h1>
           <div className="text-sm text-gray-600">
             全 {summary.total}件 | 完了 {summary.completed}件 | 残り{' '}

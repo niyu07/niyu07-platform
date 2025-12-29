@@ -13,7 +13,10 @@ import {
   formatDateISO,
 } from '../utils/dateUtils';
 import { getEventTypeColor } from '../utils/eventUtils';
-import { getDueDateLabel, getDueDateUrgency } from '@/app/tasks/utils/taskUtils';
+import {
+  getDueDateLabel,
+  getDueDateUrgency,
+} from '@/app/tasks/utils/taskUtils';
 import { CalendarColorMap } from '@/hooks/useCalendarColors';
 
 interface CalendarSidePanelProps {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useGoogleTasks } from '@/hooks/useGoogleTasks';
 
@@ -14,7 +15,6 @@ export default function TestGoogleTasksPage() {
     fetchTaskLists,
     fetchTasks,
     createTask,
-    updateTask,
     completeTask,
     deleteTask,
   } = useGoogleTasks('@default');
@@ -23,7 +23,10 @@ export default function TestGoogleTasksPage() {
   const [testResults, setTestResults] = useState<string[]>([]);
 
   const addTestResult = (message: string) => {
-    setTestResults((prev) => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
+    setTestResults((prev) => [
+      ...prev,
+      `${new Date().toLocaleTimeString()}: ${message}`,
+    ]);
   };
 
   const handleFetchTaskLists = async () => {
@@ -101,13 +104,15 @@ export default function TestGoogleTasksPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">認証が必要です</h1>
-          <p className="mb-4">Google Tasks APIをテストするにはログインしてください</p>
-          <a
+          <p className="mb-4">
+            Google Tasks APIをテストするにはログインしてください
+          </p>
+          <Link
             href="/api/auth/signin"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 inline-block"
           >
             ログイン
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -123,9 +128,7 @@ export default function TestGoogleTasksPage() {
           <h2 className="text-xl font-bold mb-4">認証情報</h2>
           <p>ユーザー: {session?.user?.name}</p>
           <p>メール: {session?.user?.email}</p>
-          <p className="text-sm text-gray-600 mt-2">
-            セッション状態: {status}
-          </p>
+          <p className="text-sm text-gray-600 mt-2">セッション状態: {status}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-6">
