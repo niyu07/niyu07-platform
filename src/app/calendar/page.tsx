@@ -1,8 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { CalendarView, CalendarEvent, Semester, Holiday } from '../types';
-import { mockCalendarEvents, mockCalendarSettings } from '../data/mockData';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { CalendarView, CalendarEvent, Semester, Holiday, Task } from '../types';
+import { mockCalendarSettings } from '../data/mockData';
+import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
+import { useGoogleTasks } from '@/hooks/useGoogleTasks';
+import { convertGoogleTasksToAppTasks } from '@/app/tasks/utils/googleTasksAdapter';
+import { useCalendarColors } from '@/hooks/useCalendarColors';
 import CalendarHeader from './components/CalendarHeader';
 import MonthView from './components/MonthView';
 import WeekView from './components/WeekView';
@@ -13,22 +18,131 @@ import CalendarSidePanel from './components/CalendarSidePanel';
 import TimeTableRegistration from './components/TimeTableRegistration';
 import SemesterSettings from './components/SemesterSettings';
 import EventDetailModal from './components/EventDetailModal';
+import CalendarSelector from './components/CalendarSelector';
 
 export default function CalendarPage() {
+  const { data: session } = useSession();
+  const {
+    events: googleEvents,
+    calendars,
+    selectedCalendarIds,
+    fetchCalendars,
+    fetchEvents,
+    setSelectedCalendarIds,
+    createEvent,
+    deleteEvent: deleteGoogleEvent,
+  } = useGoogleCalendar();
+
+  const {
+    tasks: googleTasks,
+    isLoading: tasksLoading,
+    fetchTasks,
+  } = useGoogleTasks('@default');
+
+  const { colorMap, setCalendarColor, assignDefaultColors, DEFAULT_COLORS } =
+    useCalendarColors();
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<CalendarView>(
     mockCalendarSettings.defaultView
   );
-  const [events, setEvents] = useState<CalendarEvent[]>(mockCalendarEvents);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [showEventForm, setShowEventForm] = useState(false);
   const [showTimeTableForm, setShowTimeTableForm] = useState(false);
   const [showSemesterSettings, setShowSemesterSettings] = useState(false);
+  const [showCalendarSelector, setShowCalendarSelector] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date()
   ); // 初期表示で今日を選択
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | undefined>(
     undefined
   );
+
+  // Google Tasksのデータをアプリのタスク形式に変換
+  useEffect(() => {
+    const convertedTasks = convertGoogleTasksToAppTasks(googleTasks);
+    setTasks(convertedTasks);
+  }, [googleTasks]);
+
+  // Google Calendarのイベントをローカル状態に同期し、タスクの締め切りを追加
+  useEffect(() => {
+    // Google Calendarのイベントにタスクの締め切りを追加
+    const taskDeadlines: CalendarEvent[] = tasks
+      .filter((task) => task.dueDate && task.status !== '完了')
+      .map((task) => {
+        // YYYY/MM/DD形式をYYYY-MM-DD形式に変換
+        const dateParts = task.dueDate!.split('/');
+        const isoDate = `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`;
+
+        return {
+          id: `task-${task.id}`,
+          title: `📋 ${task.title}`,
+          date: isoDate,
+          startTime: '00:00',
+          endTime: '23:59',
+          type: 'task' as any, // タスク専用タイプ（後で型定義を更新）
+          memo: task.description,
+          createdAt: task.createdAt,
+          updatedAt: task.updatedAt,
+        };
+      });
+
+    setEvents([...googleEvents, ...taskDeadlines]);
+  }, [googleEvents, tasks]);
+
+  // 初回マウント時にカレンダーリストを取得
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchCalendars();
+    }
+  }, [session?.user?.id, fetchCalendars]);
+
+  // カレンダーリストが変わったらデフォルト色を割り当て
+  useEffect(() => {
+    if (calendars.length > 0) {
+      assignDefaultColors(calendars.map((cal) => cal.id));
+    }
+  }, [calendars, assignDefaultColors]);
+
+  // ビューや日付が変わったときにイベントを再取得
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    const getDateRange = () => {
+      const startDate = new Date(currentDate);
+      const endDate = new Date(currentDate);
+
+      if (view === '月') {
+        // 月の最初と最後
+        startDate.setDate(1);
+        endDate.setMonth(endDate.getMonth() + 1);
+        endDate.setDate(0);
+      } else if (view === '週') {
+        // 週の最初(日曜日)と最後(土曜日)
+        const day = startDate.getDay();
+        startDate.setDate(startDate.getDate() - day);
+        endDate.setDate(endDate.getDate() + (6 - day));
+      } else if (view === '日') {
+        // 当日のみ
+        endDate.setDate(endDate.getDate() + 1);
+      } else {
+        // リストビュー: 現在月
+        startDate.setDate(1);
+        endDate.setMonth(endDate.getMonth() + 1);
+        endDate.setDate(0);
+      }
+
+      // 時刻をリセット
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 999);
+
+      return { startDate, endDate };
+    };
+
+    const { startDate, endDate } = getDateRange();
+    fetchEvents(startDate, endDate);
+  }, [currentDate, view, session?.user?.id, fetchEvents]);
 
   // ナビゲーション処理
   const handlePrevious = () => {
@@ -75,18 +189,27 @@ export default function CalendarPage() {
     setShowEventForm(true);
   };
 
-  const handleSaveEvent = (
+  const handleSaveEvent = async (
     eventData: Omit<CalendarEvent, 'id' | 'createdAt' | 'updatedAt'>
   ) => {
-    const newEvent: CalendarEvent = {
-      ...eventData,
-      id: `cal-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    try {
+      // Google Calendarのフォーマットに変換
+      const startDateTime = `${eventData.date}T${eventData.startTime}:00`;
+      const endDateTime = `${eventData.date}T${eventData.endTime}:00`;
 
-    setEvents([...events, newEvent]);
-    setShowEventForm(false);
+      await createEvent({
+        summary: eventData.title,
+        description: eventData.memo,
+        start: { dateTime: startDateTime },
+        end: { dateTime: endDateTime },
+        location: eventData.location,
+      });
+
+      setShowEventForm(false);
+    } catch (error) {
+      console.error('イベント作成エラー:', error);
+      alert('イベントの作成に失敗しました');
+    }
   };
 
   const handleCancelEvent = () => {
@@ -99,8 +222,14 @@ export default function CalendarPage() {
   };
 
   // イベント削除
-  const handleDeleteEvent = (eventId: string) => {
-    setEvents(events.filter((e) => e.id !== eventId));
+  const handleDeleteEvent = async (eventId: string) => {
+    try {
+      await deleteGoogleEvent(eventId);
+      setSelectedEvent(undefined);
+    } catch (error) {
+      console.error('イベント削除エラー:', error);
+      alert('イベントの削除に失敗しました');
+    }
   };
 
   // 時間割登録
@@ -134,6 +263,23 @@ export default function CalendarPage() {
     console.log('Semesters:', semesters, 'Holidays:', holidays);
   };
 
+  // カレンダー選択
+  const handleOpenCalendarSelector = () => {
+    setShowCalendarSelector(true);
+  };
+
+  const handleToggleCalendar = (calendarId: string) => {
+    setSelectedCalendarIds((prev) => {
+      if (prev.includes(calendarId)) {
+        // 最低1つは選択されている必要がある
+        if (prev.length === 1) return prev;
+        return prev.filter((id) => id !== calendarId);
+      } else {
+        return [...prev, calendarId];
+      }
+    });
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* ヘッダー */}
@@ -146,6 +292,7 @@ export default function CalendarPage() {
         onToday={handleToday}
         onAddEvent={handleAddEvent}
         onOpenSettings={handleOpenSettings}
+        onOpenCalendarSelector={handleOpenCalendarSelector}
       />
 
       {/* メインコンテンツ */}
@@ -157,6 +304,7 @@ export default function CalendarPage() {
               currentDate={currentDate}
               events={events}
               onDateClick={handleDateClick}
+              calendarColors={colorMap}
             />
           )}
           {view === '週' && (
@@ -164,6 +312,7 @@ export default function CalendarPage() {
               currentDate={currentDate}
               events={events}
               onEventClick={handleEventClick}
+              calendarColors={colorMap}
             />
           )}
           {view === '日' && (
@@ -172,10 +321,15 @@ export default function CalendarPage() {
               events={events}
               workingHours={mockCalendarSettings.workingHours}
               onEventClick={handleEventClick}
+              calendarColors={colorMap}
             />
           )}
           {view === 'リスト' && (
-            <ListView events={events} onEventClick={handleEventClick} />
+            <ListView
+              events={events}
+              onEventClick={handleEventClick}
+              calendarColors={colorMap}
+            />
           )}
         </div>
 
@@ -185,8 +339,10 @@ export default function CalendarPage() {
             selectedDate={selectedDate}
             currentDate={currentDate}
             events={events}
+            tasks={tasks}
             workingHours={mockCalendarSettings.workingHours}
             onOpenTimeTable={handleOpenTimeTable}
+            calendarColors={colorMap}
           />
         )}
       </div>
@@ -222,6 +378,19 @@ export default function CalendarPage() {
           event={selectedEvent}
           onClose={() => setSelectedEvent(undefined)}
           onDelete={handleDeleteEvent}
+        />
+      )}
+
+      {/* カレンダー選択モーダル */}
+      {showCalendarSelector && (
+        <CalendarSelector
+          calendars={calendars}
+          selectedCalendarIds={selectedCalendarIds}
+          calendarColors={colorMap}
+          onToggleCalendar={handleToggleCalendar}
+          onColorChange={setCalendarColor}
+          onClose={() => setShowCalendarSelector(false)}
+          defaultColors={DEFAULT_COLORS}
         />
       )}
     </div>

@@ -197,3 +197,63 @@ export async function deleteTask(
     throw error;
   }
 }
+
+/**
+ * タスクを更新
+ */
+export async function updateTask(
+  userId: string,
+  taskId: string,
+  taskData: {
+    title?: string;
+    notes?: string;
+    due?: string;
+    status?: 'needsAction' | 'completed';
+  },
+  taskListId: string = '@default'
+) {
+  try {
+    const tasks = await getTasksClient(userId);
+    const response = await tasks.tasks.patch({
+      tasklist: taskListId,
+      task: taskId,
+      requestBody: taskData,
+    });
+    console.log('✅ タスクを更新しました:', taskId);
+    return response.data;
+  } catch (error) {
+    console.error('❌ タスク更新エラー:', error);
+    throw error;
+  }
+}
+
+/**
+ * すべてのタスクリストからタスクを取得
+ */
+export async function getAllTasks(userId: string) {
+  try {
+    const taskLists = await getTaskLists(userId);
+    const tasksClient = await getTasksClient(userId);
+
+    const promises = taskLists.map(async (taskList) => {
+      if (!taskList.id) return [];
+      const response = await tasksClient.tasks.list({
+        tasklist: taskList.id,
+        showCompleted: true,
+        showHidden: false,
+        maxResults: 100,
+      });
+      return (response.data.items || []).map((task) => ({
+        ...task,
+        taskListId: taskList.id,
+        taskListTitle: taskList.title,
+      }));
+    });
+
+    const results = await Promise.all(promises);
+    return results.flat();
+  } catch (error) {
+    console.error('❌ 全タスク取得エラー:', error);
+    throw error;
+  }
+}

@@ -2,7 +2,7 @@
 
 import { Task } from '../../types';
 import { useState } from 'react';
-import { getDueDateUrgency } from '../utils/taskUtils';
+import { getDueDateUrgency, getDueDateLabel } from '../utils/taskUtils';
 
 interface CalendarViewProps {
   tasks: Task[];
@@ -73,8 +73,19 @@ export default function CalendarView({
   const today = new Date(2025, 11, 26); // 2025/12/26
   const todayStr = formatDate(today);
 
+  // 今後の締め切りタスクを取得（期限順にソート）
+  const upcomingTasks = tasks
+    .filter((task) => task.dueDate && task.status !== '完了')
+    .sort((a, b) => {
+      if (!a.dueDate || !b.dueDate) return 0;
+      return a.dueDate.localeCompare(b.dueDate);
+    })
+    .slice(0, 10);
+
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
+    <div className="flex gap-6">
+      {/* カレンダー本体 */}
+      <div className="flex-1 bg-white rounded-xl border border-gray-200 p-6">
       {/* カレンダーヘッダー */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-gray-900">
@@ -213,6 +224,109 @@ export default function CalendarView({
             <span>今日</span>
           </div>
         </div>
+      </div>
+      </div>
+
+      {/* 締め切りリストサイドバー */}
+      <div className="w-80 bg-white rounded-xl border border-gray-200 p-6 shrink-0">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <svg
+            className="w-5 h-5 text-gray-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+          今後の締め切り
+        </h3>
+
+        {upcomingTasks.length === 0 ? (
+          <div className="text-sm text-gray-500 text-center py-8 bg-gray-50 rounded-lg">
+            締め切りのあるタスクがありません
+          </div>
+        ) : (
+          <div className="space-y-3 max-h-[calc(100vh-240px)] overflow-y-auto">
+            {upcomingTasks.map((task) => {
+              const urgency = getDueDateUrgency(task.dueDate);
+              const label = getDueDateLabel(task.dueDate);
+              const bgColor =
+                urgency === 'overdue' || urgency === 'today'
+                  ? 'bg-red-50 border-red-300'
+                  : urgency === 'soon'
+                    ? 'bg-orange-50 border-orange-300'
+                    : 'bg-white border-gray-200';
+              const textColor =
+                urgency === 'overdue' || urgency === 'today'
+                  ? 'text-red-700'
+                  : urgency === 'soon'
+                    ? 'text-orange-700'
+                    : 'text-gray-700';
+              const badgeBgColor =
+                urgency === 'overdue' || urgency === 'today'
+                  ? 'bg-red-100'
+                  : urgency === 'soon'
+                    ? 'bg-orange-100'
+                    : 'bg-gray-100';
+
+              return (
+                <div
+                  key={task.id}
+                  onClick={() => onEdit?.(task)}
+                  className={`${bgColor} border-l-4 rounded-lg p-3 cursor-pointer hover:shadow-md transition-all`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      <div className={`text-sm font-bold ${textColor}`}>
+                        {task.title}
+                      </div>
+                      {task.description && (
+                        <div className="text-xs text-gray-600 mt-1 line-clamp-2">
+                          {task.description}
+                        </div>
+                      )}
+                    </div>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded font-semibold ${badgeBgColor} ${textColor} ml-2 shrink-0`}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>{task.dueDate}</span>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-0.5 rounded ${
+                        task.priority === '高'
+                          ? 'bg-red-100 text-red-700'
+                          : task.priority === '中'
+                            ? 'bg-orange-100 text-orange-700'
+                            : 'bg-gray-100 text-gray-700'
+                      }`}>
+                        {task.priority}
+                      </span>
+                      <span
+                        className={`px-2 py-0.5 rounded ${
+                          task.status === '未着手'
+                            ? 'bg-gray-100 text-gray-700'
+                            : task.status === '進行中'
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-green-100 text-green-700'
+                        }`}
+                      >
+                        {task.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

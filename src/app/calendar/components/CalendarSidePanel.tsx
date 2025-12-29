@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { CalendarEvent } from '../../types';
+import { CalendarEvent, Task } from '../../types';
 import {
   generateDayScheduleSummary,
   formatMinutesToHourMinute,
@@ -13,21 +13,27 @@ import {
   formatDateISO,
 } from '../utils/dateUtils';
 import { getEventTypeColor } from '../utils/eventUtils';
+import { getDueDateLabel, getDueDateUrgency } from '@/app/tasks/utils/taskUtils';
+import { CalendarColorMap } from '@/hooks/useCalendarColors';
 
 interface CalendarSidePanelProps {
   selectedDate: Date;
   currentDate: Date;
   events: CalendarEvent[];
+  tasks?: Task[];
   workingHours: { start: string; end: string };
   onOpenTimeTable: () => void;
+  calendarColors?: CalendarColorMap;
 }
 
 export default function CalendarSidePanel({
   selectedDate,
   currentDate,
   events,
+  tasks = [],
   workingHours,
   onOpenTimeTable,
+  calendarColors,
 }: CalendarSidePanelProps) {
   const summary = generateDayScheduleSummary(
     events,
@@ -38,6 +44,21 @@ export default function CalendarSidePanel({
   const month = selectedDate.getMonth() + 1;
   const day = selectedDate.getDate();
   const weekday = getWeekdayName(selectedDate);
+
+  // 選択された日付のタスクを取得（YYYY/MM/DD形式）
+  const selectedDateStr = `${selectedDate.getFullYear()}/${String(selectedDate.getMonth() + 1).padStart(2, '0')}/${String(selectedDate.getDate()).padStart(2, '0')}`;
+  const todayTasks = tasks.filter(
+    (task) => task.dueDate === selectedDateStr && task.status !== '完了'
+  );
+
+  // 今後の締め切りタスクを取得（期限順にソート）
+  const upcomingTasks = tasks
+    .filter((task) => task.dueDate && task.status !== '完了')
+    .sort((a, b) => {
+      if (!a.dueDate || !b.dueDate) return 0;
+      return a.dueDate.localeCompare(b.dueDate);
+    })
+    .slice(0, 5);
 
   // 週の忙しさ計算
   const weekStart = getWeekStart(currentDate);
@@ -131,29 +152,48 @@ export default function CalendarSidePanel({
               {summary.events
                 .sort((a, b) => a.startTime.localeCompare(b.startTime))
                 .map((event) => {
+                  const calendarColor =
+                    event.calendarId && calendarColors?.[event.calendarId];
                   const colors = getEventTypeColor(event.type);
                   return (
                     <div
                       key={event.id}
-                      className={`${colors.bg} border-l-4 ${colors.border} rounded-lg p-3`}
+                      className={`${calendarColor ? 'bg-white' : colors.bg} border-l-4 ${calendarColor ? '' : colors.border} rounded-lg p-3`}
+                      style={
+                        calendarColor
+                          ? {
+                              backgroundColor: calendarColor + '20',
+                              borderLeftColor: calendarColor,
+                            }
+                          : undefined
+                      }
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span
-                          className={`text-xs font-semibold ${colors.text}`}
+                          className={`text-xs font-semibold ${calendarColor ? 'text-gray-900' : colors.text}`}
                         >
                           {event.startTime} - {event.endTime}
                         </span>
                         <span
-                          className={`text-xs px-2 py-0.5 rounded ${colors.bg} ${colors.text} font-medium`}
+                          className={`text-xs px-2 py-0.5 rounded ${calendarColor ? 'text-white' : `${colors.bg} ${colors.text}`} font-medium`}
+                          style={
+                            calendarColor
+                              ? { backgroundColor: calendarColor }
+                              : undefined
+                          }
                         >
                           {event.type}
                         </span>
                       </div>
-                      <div className={`text-sm font-bold ${colors.text} mb-1`}>
+                      <div
+                        className={`text-sm font-bold ${calendarColor ? 'text-gray-900' : colors.text} mb-1`}
+                      >
                         {event.title}
                       </div>
                       {event.location && (
-                        <div className={`text-xs ${colors.text} opacity-75`}>
+                        <div
+                          className={`text-xs ${calendarColor ? 'text-gray-600' : colors.text} opacity-75`}
+                        >
                           📍 {event.location}
                         </div>
                       )}
@@ -201,6 +241,136 @@ export default function CalendarSidePanel({
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* 今日の締め切りタスク */}
+        {todayTasks.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                <svg
+                  className="w-4 h-4 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+                本日の締め切り
+              </h3>
+              <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-semibold">
+                {todayTasks.length}件
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              {todayTasks.map((task) => {
+                const urgency = getDueDateUrgency(task.dueDate);
+                const bgColor =
+                  urgency === 'overdue' || urgency === 'today'
+                    ? 'bg-red-50 border-red-300'
+                    : 'bg-orange-50 border-orange-300';
+                const textColor =
+                  urgency === 'overdue' || urgency === 'today'
+                    ? 'text-red-700'
+                    : 'text-orange-700';
+
+                return (
+                  <div
+                    key={task.id}
+                    className={`${bgColor} border-l-4 rounded-lg p-3`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className={`text-sm font-bold ${textColor}`}>
+                          {task.title}
+                        </div>
+                        {task.description && (
+                          <div className="text-xs text-gray-600 mt-1">
+                            {task.description}
+                          </div>
+                        )}
+                      </div>
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded font-semibold ${textColor} bg-white ml-2`}
+                      >
+                        {task.priority}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* 今後の締め切り */}
+        {upcomingTasks.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                <svg
+                  className="w-4 h-4 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                今後の締め切り
+              </h3>
+            </div>
+
+            <div className="space-y-2">
+              {upcomingTasks.map((task) => {
+                const urgency = getDueDateUrgency(task.dueDate);
+                const label = getDueDateLabel(task.dueDate);
+                const bgColor =
+                  urgency === 'overdue' || urgency === 'today'
+                    ? 'bg-red-100'
+                    : urgency === 'soon'
+                      ? 'bg-orange-100'
+                      : 'bg-gray-100';
+                const textColor =
+                  urgency === 'overdue' || urgency === 'today'
+                    ? 'text-red-700'
+                    : urgency === 'soon'
+                      ? 'text-orange-700'
+                      : 'text-gray-700';
+
+                return (
+                  <div
+                    key={task.id}
+                    className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-shadow"
+                  >
+                    <div className="flex items-start justify-between mb-1">
+                      <div className="text-sm font-semibold text-gray-900">
+                        {task.title}
+                      </div>
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded font-semibold ${bgColor} ${textColor} ml-2 flex-shrink-0`}
+                      >
+                        {label}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {task.dueDate} • 優先度: {task.priority}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
