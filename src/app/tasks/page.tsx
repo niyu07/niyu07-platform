@@ -244,9 +244,6 @@ export default function TasksPage() {
         <MemoList
           userId={session?.user?.id || mockUser.id}
           onConvertToTask={handleConvertMemoToTask}
-          onMemoDeleted={() => {
-            // メモ削除時の処理
-          }}
         />
 
         {/* 操作バー */}

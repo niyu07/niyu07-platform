@@ -13,14 +13,9 @@ interface Memo {
 interface MemoListProps {
   userId: string;
   onConvertToTask: (memo: Memo) => void;
-  onMemoDeleted?: () => void;
 }
 
-export default function MemoList({
-  userId,
-  onConvertToTask,
-  onMemoDeleted,
-}: MemoListProps) {
+export default function MemoList({ userId, onConvertToTask }: MemoListProps) {
   const [memos, setMemos] = useState<Memo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -113,13 +108,6 @@ export default function MemoList({
   const handleConvertToTask = (memo: Memo) => {
     onConvertToTask(memo);
   };
-
-  // MemoList を外部から更新できるように、外部イベントを監視
-  useEffect(() => {
-    if (onMemoDeleted) {
-      fetchMemos();
-    }
-  }, [onMemoDeleted, fetchMemos]);
 
   if (isLoading) {
     return (
