@@ -8,12 +8,14 @@ interface EventWeatherIntegrationProps {
   events: CalendarEvent[];
   forecasts: HourlyForecast[];
   suggestions: Suggestion[];
+  loading?: boolean;
 }
 
 export default function EventWeatherIntegration({
   events,
   forecasts,
   suggestions,
+  loading = false,
 }: EventWeatherIntegrationProps) {
   // Get weather for specific time
   const getWeatherAtTime = (time: string) => {
@@ -42,108 +44,122 @@ export default function EventWeatherIntegration({
         </Link>
       </div>
 
-      <div className="space-y-3">
-        {events.map((event) => {
-          const weather = getWeatherAtTime(event.startTime);
-          const eventSuggestions = getSuggestionsForEvent(event.id);
-          const hasCriticalSuggestion = eventSuggestions.some(
-            (s) => s.severity === 'critical'
-          );
-          const hasWarningSuggestion = eventSuggestions.some(
-            (s) => s.severity === 'warning'
-          );
+      {loading && (
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          <span className="ml-3 text-gray-600">カレンダーを読み込み中...</span>
+        </div>
+      )}
 
-          return (
-            <div
-              key={event.id}
-              className={`border-l-4 rounded-lg p-4 ${
-                hasCriticalSuggestion
-                  ? 'bg-red-50 border-red-500'
-                  : hasWarningSuggestion
-                    ? 'bg-yellow-50 border-yellow-500'
-                    : 'bg-blue-50 border-blue-500'
-              }`}
-            >
-              {/* Event Header */}
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-lg font-bold text-gray-800">
-                      {event.startTime}
-                    </span>
-                    <span className="font-semibold text-gray-700">
-                      {event.title}
-                    </span>
+      {!loading && events.length === 0 && (
+        <div className="text-center py-8 text-gray-500">
+          今日の予定はありません
+        </div>
+      )}
+
+      <div className="space-y-3">
+        {!loading &&
+          events.map((event) => {
+            const weather = getWeatherAtTime(event.startTime);
+            const eventSuggestions = getSuggestionsForEvent(event.id);
+            const hasCriticalSuggestion = eventSuggestions.some(
+              (s) => s.severity === 'critical'
+            );
+            const hasWarningSuggestion = eventSuggestions.some(
+              (s) => s.severity === 'warning'
+            );
+
+            return (
+              <div
+                key={event.id}
+                className={`border-l-4 rounded-lg p-4 ${
+                  hasCriticalSuggestion
+                    ? 'bg-red-50 border-red-500'
+                    : hasWarningSuggestion
+                      ? 'bg-yellow-50 border-yellow-500'
+                      : 'bg-blue-50 border-blue-500'
+                }`}
+              >
+                {/* Event Header */}
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-lg font-bold text-gray-800">
+                        {event.startTime}
+                      </span>
+                      <span className="font-semibold text-gray-700">
+                        {event.title}
+                      </span>
+                    </div>
+                    {event.location && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <span>📍</span>
+                        <span>{event.location}</span>
+                      </div>
+                    )}
                   </div>
-                  {event.location && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <span>📍</span>
-                      <span>{event.location}</span>
+
+                  {/* Weather Info */}
+                  {weather && (
+                    <div className="flex items-center gap-3 text-right">
+                      <div className="text-3xl">
+                        {getWeatherIcon(weather.condition)}
+                      </div>
+                      <div className="text-sm">
+                        <div
+                          className={`text-lg font-bold ${
+                            hasCriticalSuggestion
+                              ? 'text-red-700'
+                              : hasWarningSuggestion
+                                ? 'text-yellow-700'
+                                : 'text-blue-700'
+                          }`}
+                        >
+                          {weather.temperature}°C
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
 
-                {/* Weather Info */}
-                {weather && (
-                  <div className="flex items-center gap-3 text-right">
-                    <div className="text-3xl">
-                      {getWeatherIcon(weather.condition)}
-                    </div>
-                    <div className="text-sm">
+                {/* Suggestions */}
+                {eventSuggestions.length > 0 && (
+                  <div className="space-y-2 mt-3">
+                    {eventSuggestions.map((suggestion) => (
                       <div
-                        className={`text-lg font-bold ${
-                          hasCriticalSuggestion
+                        key={suggestion.id}
+                        className={`flex items-start gap-2 text-sm ${
+                          suggestion.severity === 'critical'
                             ? 'text-red-700'
-                            : hasWarningSuggestion
+                            : suggestion.severity === 'warning'
                               ? 'text-yellow-700'
                               : 'text-blue-700'
                         }`}
                       >
-                        {weather.temperature}°C
+                        {suggestion.severity === 'critical' && (
+                          <span className="flex-shrink-0">❌</span>
+                        )}
+                        {suggestion.severity === 'warning' && (
+                          <span className="flex-shrink-0">⚠️</span>
+                        )}
+                        {suggestion.severity === 'info' && (
+                          <span className="flex-shrink-0">💡</span>
+                        )}
+                        <div className="flex-1">
+                          <div className="font-semibold">
+                            {suggestion.message}
+                          </div>
+                          <div className="text-xs opacity-80 mt-0.5">
+                            {suggestion.reason}
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
                 )}
               </div>
-
-              {/* Suggestions */}
-              {eventSuggestions.length > 0 && (
-                <div className="space-y-2 mt-3">
-                  {eventSuggestions.map((suggestion) => (
-                    <div
-                      key={suggestion.id}
-                      className={`flex items-start gap-2 text-sm ${
-                        suggestion.severity === 'critical'
-                          ? 'text-red-700'
-                          : suggestion.severity === 'warning'
-                            ? 'text-yellow-700'
-                            : 'text-blue-700'
-                      }`}
-                    >
-                      {suggestion.severity === 'critical' && (
-                        <span className="flex-shrink-0">❌</span>
-                      )}
-                      {suggestion.severity === 'warning' && (
-                        <span className="flex-shrink-0">⚠️</span>
-                      )}
-                      {suggestion.severity === 'info' && (
-                        <span className="flex-shrink-0">💡</span>
-                      )}
-                      <div className="flex-1">
-                        <div className="font-semibold">
-                          {suggestion.message}
-                        </div>
-                        <div className="text-xs opacity-80 mt-0.5">
-                          {suggestion.reason}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
+            );
+          })}
       </div>
 
       {/* General Suggestions (not tied to specific events) */}
