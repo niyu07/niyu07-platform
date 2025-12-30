@@ -27,6 +27,9 @@ model User {
   dailyStats       DailyStats[]
   categoryStats    CategoryStats[]
   productivityData TimeSlotProductivity[]
+  attendanceRecords AttendanceRecord[]
+  workLocations    WorkLocation[]
+  memos            Memo[]
 
   @@map("users")
 }
@@ -185,4 +188,61 @@ model TimeSlotProductivity {
   @@unique([userId, timeSlot, dayOfWeek, weekStart])
   @@index([userId, weekStart])
   @@map("time_slot_productivity")
+}
+
+// 勤務先マスタ
+model WorkLocation {
+  id           String    @id @default(cuid())
+  userId       String
+  name         String // 勤務先名
+  type         String // '時給制' | '日給制' | '業務委託'
+  hourlyRate   Int? // 時給（円）
+  dailyRate    Int? // 日給（円）
+  projectRate  Int? // 単価（業務委託の場合、時間単価）
+  color        String   @default("#3B82F6") // UI表示用カラー
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attendanceRecords AttendanceRecord[]
+
+  @@index([userId])
+  @@map("work_locations")
+}
+
+// 勤怠記録
+model AttendanceRecord {
+  id             String    @id @default(cuid())
+  userId         String
+  workLocationId String
+  date           DateTime  @db.Date // 勤務日（日付のみ）
+  clockIn        DateTime? // 出勤時刻
+  clockOut       DateTime? // 退勤時刻
+  workMinutes    Int? // 勤務時間（分）自動計算
+  note           String?   @db.Text // メモ・備考
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workLocation WorkLocation @relation(fields: [workLocationId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+  @@index([workLocationId])
+  @@map("attendance_records")
+}
+
+// メモ（思いついたことをサッと書ける、後でタスク化可能）
+model Memo {
+  id        String   @id @default(cuid())
+  userId    String
+  content   String   @db.Text // メモ内容
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("memos")
 }

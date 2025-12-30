@@ -18,6 +18,7 @@ import ListView from './components/ListView';
 import CalendarView from './components/CalendarView';
 import TaskForm from './components/TaskForm';
 import TaskDashboardComponent from './components/TaskDashboard';
+import MemoList from './components/MemoList';
 import {
   filterTasks,
   sortTasks,
@@ -26,7 +27,7 @@ import {
 
 export default function TasksPage() {
   const router = useRouter();
-  const { status: authStatus } = useSession();
+  const { status: authStatus, data: session } = useSession();
   const {
     tasks: googleTasks,
     isLoading,
@@ -38,6 +39,7 @@ export default function TasksPage() {
   const [currentView, setCurrentView] = useState<TaskView>('カンバン');
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
+  const [taskFromMemo, setTaskFromMemo] = useState<{ title: string; description: string; memoId: string } | null>(null);
   const [filter] = useState<TaskFilter>({});
   const [sort] = useState<TaskSort>({
     field: 'dueDate',
@@ -45,6 +47,7 @@ export default function TasksPage() {
   });
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [memoDeleteTrigger, setMemoDeleteTrigger] = useState(0);
 
   // Google Tasksのデータをアプリのタスク形式に変換
   const tasks = useMemo(
@@ -80,6 +83,21 @@ export default function TasksPage() {
     try {
       const googleTaskData = convertAppTaskToGoogleTaskCreate(taskData);
       await createGoogleTask(googleTaskData);
+
+      // メモから作成した場合は、メモを削除
+      if (taskFromMemo) {
+        try {
+          await fetch(`/api/memos?id=${taskFromMemo.memoId}`, {
+            method: 'DELETE',
+          });
+          setMemoDeleteTrigger(prev => prev + 1); // メモリストを更新
+          window.dispatchEvent(new CustomEvent('memoDeleted'));
+        } catch (error) {
+          console.error('メモ削除エラー:', error);
+        }
+        setTaskFromMemo(null);
+      }
+
       setShowNewTaskForm(false);
     } catch (error) {
       console.error('タスク作成エラー:', error);
@@ -145,6 +163,16 @@ export default function TasksPage() {
     }
   };
 
+  // メモをタスクに変換（タスクフォームを開く）
+  const handleConvertMemoToTask = (memo: { id: string; content: string }) => {
+    // メモの内容からタイトルと説明を生成
+    const title = memo.content.length > 50 ? memo.content.substring(0, 50) + '...' : memo.content;
+    const description = memo.content;
+
+    setTaskFromMemo({ title, description, memoId: memo.id });
+    setShowNewTaskForm(true);
+  };
+
   // ビューアイコン
   const getViewIcon = (view: TaskView) => {
     switch (view) {
@@ -206,6 +234,13 @@ export default function TasksPage() {
             </div>
           )}
         </div>
+
+        {/* メモリスト */}
+        <MemoList
+          userId={session?.user?.id || mockUser.id}
+          onConvertToTask={handleConvertMemoToTask}
+          onMemoDeleted={() => setMemoDeleteTrigger(prev => prev + 1)}
+        />
 
         {/* 操作バー */}
         <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
@@ -322,12 +357,28 @@ export default function TasksPage() {
 
       {/* タスクフォーム */}
       <TaskForm
-        key={editingTask?.id || 'new'}
-        task={editingTask}
+        key={editingTask?.id || taskFromMemo?.memoId || 'new'}
+        task={
+          editingTask ||
+          (taskFromMemo
+            ? {
+                id: 'temp',
+                title: taskFromMemo.title,
+                description: taskFromMemo.description,
+                status: '未着手' as const,
+                priority: '中' as const,
+                categories: ['その他' as const],
+                estimatedMinutes: 25,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              }
+            : undefined)
+        }
         isOpen={showNewTaskForm}
         onClose={() => {
           setShowNewTaskForm(false);
           setEditingTask(undefined);
+          setTaskFromMemo(null);
         }}
         onSave={editingTask ? handleUpdateTask : handleCreateTask}
       />

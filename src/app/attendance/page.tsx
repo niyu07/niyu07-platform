@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { AttendanceRecord, WorkLocation } from '../types';
 import {
   mockAttendanceRecords,
@@ -12,76 +13,145 @@ import AttendanceDashboard from './components/AttendanceDashboard';
 import AttendanceHistory from './components/AttendanceHistory';
 import SalaryCalculator from './components/SalaryCalculator';
 import CalendarImport from './components/CalendarImport';
+import WorkLocationSettings from './components/WorkLocationSettings';
 import {
   calculateMonthlySummary,
   calculateWorkMinutes,
 } from './utils/attendanceUtils';
 import { exportSalaryToAccounting } from './utils/accountingIntegration';
 import { formatDateISO } from '../calendar/utils/dateUtils';
+import { useAttendance } from './hooks/useAttendance';
+import { useWorkLocations } from './hooks/useWorkLocations';
 
-type TabType = 'ダッシュボード' | '勤怠履歴' | '給与計算' | 'カレンダー連携';
+type TabType =
+  | 'ダッシュボード'
+  | '勤怠履歴'
+  | '給与計算'
+  | 'カレンダー連携'
+  | '設定';
 
 export default function AttendancePage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState<TabType>('ダッシュボード');
-  const [attendanceRecords, setAttendanceRecords] = useState<
-    AttendanceRecord[]
-  >(mockAttendanceRecords);
-  const [workLocations] = useState<WorkLocation[]>(mockWorkLocations);
+  const [useDatabaseOverride, setUseDatabaseOverride] = useState<
+    boolean | null
+  >(null);
+
+  // デフォルトはセッションの有無、ユーザーが手動で切り替え可能
+  const useDatabase = useMemo(() => {
+    if (useDatabaseOverride !== null) {
+      return useDatabaseOverride;
+    }
+    return !!session?.user;
+  }, [useDatabaseOverride, session]);
+
+  // データベース連携
+  const {
+    attendanceRecords: dbRecords,
+    isLoading,
+    clockIn: dbClockIn,
+    clockOut: dbClockOut,
+    updateRecord: dbUpdateRecord,
+    deleteRecord: dbDeleteRecord,
+  } = useAttendance(session?.user?.id || null);
+
+  // 勤務先データベース連携
+  const {
+    workLocations: dbWorkLocations,
+    addWorkLocation,
+    updateWorkLocation,
+    deleteWorkLocation,
+  } = useWorkLocations(session?.user?.id || null);
+
+  // モックデータとの切り替え
+  const [mockRecords, setMockRecords] = useState<AttendanceRecord[]>(
+    mockAttendanceRecords
+  );
+  const [mockLocations] = useState<WorkLocation[]>(mockWorkLocations);
+
+  const attendanceRecords = useDatabase ? dbRecords : mockRecords;
+  const workLocations = useDatabase ? dbWorkLocations : mockLocations;
 
   const tabs: TabType[] = [
     'ダッシュボード',
     '勤怠履歴',
     '給与計算',
     'カレンダー連携',
+    '設定',
   ];
 
   // 出勤打刻ハンドラー
-  const handleClockIn = (workLocationId: string, clockInTime: string) => {
-    const newRecord: AttendanceRecord = {
-      id: `att-${Date.now()}`,
-      date: formatDateISO(new Date()),
-      workLocationId,
-      status: '出勤中',
-      clockInTime,
-      breakMinutes: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setAttendanceRecords([...attendanceRecords, newRecord]);
+  const handleClockIn = async (workLocationId: string, clockInTime: string) => {
+    try {
+      if (useDatabase && session?.user?.id) {
+        // データベースに保存
+        await dbClockIn(workLocationId, clockInTime);
+      } else {
+        // モックデータを更新
+        const newRecord: AttendanceRecord = {
+          id: `att-${Date.now()}`,
+          date: formatDateISO(new Date()),
+          workLocationId,
+          status: '出勤中',
+          clockInTime,
+          breakMinutes: 0,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        setMockRecords([...mockRecords, newRecord]);
+      }
+    } catch (error) {
+      console.error('出勤打刻エラー:', error);
+      alert('出勤打刻に失敗しました');
+    }
   };
 
   // 退勤打刻ハンドラー
-  const handleClockOut = (
+  const handleClockOut = async (
     recordId: string,
     clockOutTime: string,
     breakMinutes: number
   ) => {
-    setAttendanceRecords(
-      attendanceRecords.map((record) => {
-        if (record.id === recordId) {
-          const workMinutes = calculateWorkMinutes(
-            record.clockInTime!,
-            clockOutTime,
-            breakMinutes
-          );
-          return {
-            ...record,
-            status: '退勤済み',
-            clockOutTime,
-            breakMinutes,
-            workMinutes,
-            updatedAt: new Date().toISOString(),
-          };
-        }
-        return record;
-      })
-    );
+    try {
+      if (useDatabase && session?.user?.id) {
+        // データベースに保存
+        await dbClockOut(recordId, clockOutTime, breakMinutes);
+      } else {
+        // モックデータを更新
+        setMockRecords(
+          mockRecords.map((record) => {
+            if (record.id === recordId) {
+              const workMinutes = calculateWorkMinutes(
+                record.clockInTime!,
+                clockOutTime,
+                breakMinutes
+              );
+              return {
+                ...record,
+                status: '退勤済み',
+                clockOutTime,
+                breakMinutes,
+                workMinutes,
+                updatedAt: new Date().toISOString(),
+              };
+            }
+            return record;
+          })
+        );
+      }
+    } catch (error) {
+      console.error('退勤打刻エラー:', error);
+      alert('退勤打刻に失敗しました');
+    }
   };
 
   // カレンダーインポートハンドラー
   const handleImportFromCalendar = (importedRecords: AttendanceRecord[]) => {
-    setAttendanceRecords([...attendanceRecords, ...importedRecords]);
+    if (!useDatabase) {
+      setMockRecords([...mockRecords, ...importedRecords]);
+    }
+    // データベース使用時は、別途API実装が必要
     setActiveTab('ダッシュボード');
     alert(`${importedRecords.length}件の勤怠記録をインポートしました`);
   };
@@ -119,6 +189,8 @@ export default function AttendancePage() {
           <AttendanceHistory
             records={attendanceRecords}
             workLocations={workLocations}
+            onUpdateRecord={useDatabase ? dbUpdateRecord : undefined}
+            onDeleteRecord={useDatabase ? dbDeleteRecord : undefined}
           />
         );
       case '給与計算':
@@ -141,6 +213,15 @@ export default function AttendancePage() {
             onImport={handleImportFromCalendar}
           />
         );
+      case '設定':
+        return (
+          <WorkLocationSettings
+            workLocations={workLocations}
+            onAdd={useDatabase ? addWorkLocation : async () => {}}
+            onUpdate={useDatabase ? updateWorkLocation : async () => {}}
+            onDelete={useDatabase ? deleteWorkLocation : async () => {}}
+          />
+        );
       default:
         return (
           <AttendanceDashboard
@@ -153,15 +234,52 @@ export default function AttendancePage() {
     }
   };
 
+  // セッション読み込み中
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-500">読み込み中...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-[1400px] mx-auto p-6">
         {/* ヘッダー */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">勤怠管理</h1>
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-3xl font-bold text-gray-900">勤怠管理</h1>
+            {session?.user && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">
+                  {useDatabase ? 'データベース' : 'デモモード'}
+                </span>
+                <button
+                  onClick={() => setUseDatabaseOverride(!useDatabase)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    useDatabase ? 'bg-blue-600' : 'bg-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      useDatabase ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            )}
+          </div>
           <p className="text-gray-600">
             出退勤の記録、給与計算、勤務時間の可視化を一元管理します。
           </p>
+          {!session?.user && status === 'unauthenticated' && (
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                データベース機能を使用するにはログインしてください。現在はデモモードで表示されています。
+              </p>
+            </div>
+          )}
         </div>
 
         {/* タブナビゲーション */}
@@ -184,7 +302,15 @@ export default function AttendancePage() {
         </div>
 
         {/* コンテンツエリア */}
-        <div>{renderContent()}</div>
+        <div>
+          {isLoading && useDatabase ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="text-gray-500">読み込み中...</div>
+            </div>
+          ) : (
+            renderContent()
+          )}
+        </div>
       </div>
     </div>
   );
