@@ -39,7 +39,11 @@ export default function TasksPage() {
   const [currentView, setCurrentView] = useState<TaskView>('カンバン');
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
-  const [taskFromMemo, setTaskFromMemo] = useState<{ title: string; description: string; memoId: string } | null>(null);
+  const [taskFromMemo, setTaskFromMemo] = useState<{
+    title: string;
+    description: string;
+    memoId: string;
+  } | null>(null);
   const [filter] = useState<TaskFilter>({});
   const [sort] = useState<TaskSort>({
     field: 'dueDate',
@@ -47,7 +51,6 @@ export default function TasksPage() {
   });
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [showSortMenu, setShowSortMenu] = useState(false);
-  const [memoDeleteTrigger, setMemoDeleteTrigger] = useState(0);
 
   // Google Tasksのデータをアプリのタスク形式に変換
   const tasks = useMemo(
@@ -90,7 +93,6 @@ export default function TasksPage() {
           await fetch(`/api/memos?id=${taskFromMemo.memoId}`, {
             method: 'DELETE',
           });
-          setMemoDeleteTrigger(prev => prev + 1); // メモリストを更新
           window.dispatchEvent(new CustomEvent('memoDeleted'));
         } catch (error) {
           console.error('メモ削除エラー:', error);
@@ -166,7 +168,10 @@ export default function TasksPage() {
   // メモをタスクに変換（タスクフォームを開く）
   const handleConvertMemoToTask = (memo: { id: string; content: string }) => {
     // メモの内容からタイトルと説明を生成
-    const title = memo.content.length > 50 ? memo.content.substring(0, 50) + '...' : memo.content;
+    const title =
+      memo.content.length > 50
+        ? memo.content.substring(0, 50) + '...'
+        : memo.content;
     const description = memo.content;
 
     setTaskFromMemo({ title, description, memoId: memo.id });
@@ -239,7 +244,9 @@ export default function TasksPage() {
         <MemoList
           userId={session?.user?.id || mockUser.id}
           onConvertToTask={handleConvertMemoToTask}
-          onMemoDeleted={() => setMemoDeleteTrigger(prev => prev + 1)}
+          onMemoDeleted={() => {
+            // メモ削除時の処理
+          }}
         />
 
         {/* 操作バー */}

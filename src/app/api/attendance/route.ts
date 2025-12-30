@@ -49,7 +49,10 @@ export async function GET(request: NextRequest) {
       await prisma.$connect();
       console.log('[GET /api/attendance] Prisma connected successfully');
     } catch (connectError) {
-      console.error('[GET /api/attendance] Prisma connection error:', connectError);
+      console.error(
+        '[GET /api/attendance] Prisma connection error:',
+        connectError
+      );
       throw connectError;
     }
 

@@ -28,7 +28,11 @@ export function useWorkLocations(userId: string | null) {
           statusText: response.statusText,
           errorData,
         });
-        throw new Error(errorData.error || errorData.details || 'Failed to fetch work locations');
+        throw new Error(
+          errorData.error ||
+            errorData.details ||
+            'Failed to fetch work locations'
+        );
       }
 
       const data = await response.json();
@@ -113,7 +117,7 @@ export function useWorkLocations(userId: string | null) {
       }
 
       setWorkLocations((prev) => prev.filter((loc) => loc.id !== id));
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error deleting work location:', err);
       throw err;
     }

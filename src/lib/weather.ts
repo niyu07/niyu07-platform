@@ -129,7 +129,29 @@ export async function getWeatherForecast(
 
     const data = await response.json();
 
-    const forecasts: ForecastItem[] = data.list.map((item: any) => ({
+    interface ApiListItem {
+      dt: number;
+      main: {
+        temp: number;
+        feels_like: number;
+        temp_min: number;
+        temp_max: number;
+        humidity: number;
+      };
+      weather: Array<{
+        description: string;
+        icon: string;
+      }>;
+      wind: {
+        speed: number;
+      };
+      clouds: {
+        all: number;
+      };
+      pop: number;
+    }
+
+    const forecasts: ForecastItem[] = data.list.map((item: ApiListItem) => ({
       timestamp: item.dt,
       date: new Date(item.dt * 1000).toISOString(),
       temperature: Math.round(item.main.temp),

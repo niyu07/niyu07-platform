@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface Memo {
   id: string;
@@ -16,16 +16,22 @@ interface MemoListProps {
   onMemoDeleted?: () => void;
 }
 
-export default function MemoList({ userId, onConvertToTask, onMemoDeleted }: MemoListProps) {
+export default function MemoList({
+  userId,
+  onConvertToTask,
+  onMemoDeleted,
+}: MemoListProps) {
   const [memos, setMemos] = useState<Memo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-  const fetchMemos = async () => {
+  const fetchMemos = useCallback(async () => {
     try {
-      const response = await fetch(`/api/memos?userId=${userId}&order=${sortOrder}`);
+      const response = await fetch(
+        `/api/memos?userId=${userId}&order=${sortOrder}`
+      );
       if (response.ok) {
         const data = await response.json();
         setMemos(data);
@@ -35,11 +41,11 @@ export default function MemoList({ userId, onConvertToTask, onMemoDeleted }: Mem
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId, sortOrder]);
 
   useEffect(() => {
     fetchMemos();
-  }, [userId, sortOrder]);
+  }, [fetchMemos]);
 
   // メモ追加・更新・削除イベントを監視してリアルタイム更新
   useEffect(() => {
@@ -56,7 +62,7 @@ export default function MemoList({ userId, onConvertToTask, onMemoDeleted }: Mem
       window.removeEventListener('memoUpdated', handleMemoChange);
       window.removeEventListener('memoDeleted', handleMemoChange);
     };
-  }, [userId, sortOrder]);
+  }, [fetchMemos]);
 
   const handleEdit = (memo: Memo) => {
     setEditingId(memo.id);
@@ -108,10 +114,12 @@ export default function MemoList({ userId, onConvertToTask, onMemoDeleted }: Mem
     onConvertToTask(memo);
   };
 
-  // MemoList を外部から更新できるように、userId が変わったら再取得
+  // MemoList を外部から更新できるように、外部イベントを監視
   useEffect(() => {
-    fetchMemos();
-  }, [onMemoDeleted]);
+    if (onMemoDeleted) {
+      fetchMemos();
+    }
+  }, [onMemoDeleted, fetchMemos]);
 
   if (isLoading) {
     return (

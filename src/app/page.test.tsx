@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
+import { SessionProvider } from 'next-auth/react';
 import Home from './page';
 
 /**
@@ -9,9 +10,16 @@ import Home from './page';
  * 初心者向けの最初のテストとして、シンプルな内容にしています。
  */
 describe('Home Page', () => {
+  // テスト用のラッパー関数
+  const renderWithSession = (component: React.ReactElement) => {
+    return render(
+      <SessionProvider session={null}>{component}</SessionProvider>
+    );
+  };
+
   it('ページが正しく表示される', () => {
     // ホームページを描画する
-    render(<Home />);
+    renderWithSession(<Home />);
 
     // Productivity Hub というタイトルが表示されているか確認
     const heading = screen.getByText(/Productivity Hub/i);
@@ -20,7 +28,7 @@ describe('Home Page', () => {
 
   it('サイドバーが表示される', () => {
     // ホームページを描画する
-    render(<Home />);
+    renderWithSession(<Home />);
 
     // サイドバーの「ホーム」メニューが表示されているか確認
     const homeMenu = screen.getByText('ホーム');
@@ -29,7 +37,7 @@ describe('Home Page', () => {
 
   it('今月の支出カードが表示される', () => {
     // ホームページを描画する
-    render(<Home />);
+    renderWithSession(<Home />);
 
     // 今月の支出カードが表示されているか確認
     const expenseCard = screen.getByText('今月の支出');

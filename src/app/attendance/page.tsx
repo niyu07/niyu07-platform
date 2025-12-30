@@ -116,7 +116,7 @@ export default function AttendancePage() {
     try {
       if (useDatabase && session?.user?.id) {
         // データベースに保存
-        await dbClockOut(recordId, clockOutTime, breakMinutes);
+        await dbClockOut(recordId, clockOutTime);
       } else {
         // モックデータを更新
         setMockRecords(

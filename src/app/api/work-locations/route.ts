@@ -22,7 +22,10 @@ export async function GET(request: NextRequest) {
       await prisma.$connect();
       console.log('[GET /api/work-locations] Prisma connected successfully');
     } catch (connectError) {
-      console.error('[GET /api/work-locations] Prisma connection error:', connectError);
+      console.error(
+        '[GET /api/work-locations] Prisma connection error:',
+        connectError
+      );
       throw connectError;
     }
 
@@ -31,7 +34,10 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    console.log('[GET /api/work-locations] Found locations:', workLocations.length);
+    console.log(
+      '[GET /api/work-locations] Found locations:',
+      workLocations.length
+    );
     return NextResponse.json(workLocations);
   } catch (error) {
     console.error('[GET /api/work-locations] Error details:', {
@@ -104,7 +110,15 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'id is required' }, { status: 400 });
     }
 
-    const data: any = {};
+    const data: {
+      name?: string;
+      type?: string;
+      hourlyRate?: number | null;
+      dailyRate?: number | null;
+      projectRate?: number | null;
+      color?: string;
+      isActive?: boolean;
+    } = {};
     if (name !== undefined) data.name = name;
     if (type !== undefined) data.type = type;
     if (hourlyRate !== undefined) data.hourlyRate = hourlyRate;

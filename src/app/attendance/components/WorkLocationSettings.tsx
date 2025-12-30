@@ -113,8 +113,10 @@ export default function WorkLocationSettings({
 
     try {
       await onDelete(id);
-    } catch (error: any) {
-      alert(error.message || '勤務先の削除に失敗しました');
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : '勤務先の削除に失敗しました';
+      alert(errorMessage);
     }
   };
 

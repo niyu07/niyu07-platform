@@ -1,5 +1,17 @@
 import { useState, useCallback } from 'react';
 
+export interface AttendanceRecord {
+  id: string;
+  userId: string;
+  clockIn: string;
+  clockOut: string | null;
+  breakMinutes: number;
+  workLocationId: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AttendanceSummary {
   totalWorkMinutes: number;
   totalWorkDays: number;
@@ -12,7 +24,7 @@ export interface AttendanceSummary {
       workDays: number;
     };
   };
-  records: any[];
+  records: AttendanceRecord[];
 }
 
 export function useAttendanceSummary(userId: string | null) {

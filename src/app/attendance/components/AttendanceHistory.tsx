@@ -73,7 +73,7 @@ export default function AttendanceHistory({
       </div>
 
       {viewMode === 'calendar' ? (
-        <AttendanceCalendar records={records} workLocations={workLocations} />
+        <AttendanceCalendar records={records} />
       ) : (
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
           {/* フィルター */}

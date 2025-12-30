@@ -1,17 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { AttendanceRecord, WorkLocation } from '@/app/types';
+import { AttendanceRecord } from '@/app/types';
 import { formatMinutesToHourMinute } from '../../calendar/utils/dateUtils';
 
 interface AttendanceCalendarProps {
   records: AttendanceRecord[];
-  workLocations: WorkLocation[];
 }
 
 export default function AttendanceCalendar({
   records,
-  workLocations,
 }: AttendanceCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
 

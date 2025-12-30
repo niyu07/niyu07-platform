@@ -36,7 +36,9 @@ export function useAttendance(userId: string | null) {
             errorData,
           });
           throw new Error(
-            errorData.error || errorData.details || 'Failed to fetch attendance records'
+            errorData.error ||
+              errorData.details ||
+              'Failed to fetch attendance records'
           );
         }
 
@@ -126,7 +128,7 @@ export function useAttendance(userId: string | null) {
 
   // 退勤打刻
   const clockOut = useCallback(
-    async (recordId: string, clockOutTime: string, _breakMinutes: number) => {
+    async (recordId: string, clockOutTime: string) => {
       try {
         const record = attendanceRecords.find((r) => r.id === recordId);
         if (!record) {

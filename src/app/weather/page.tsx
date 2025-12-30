@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../components/Sidebar';
 import LocationSelector from './components/LocationSelector';
 import CurrentWeatherCard from './components/CurrentWeatherCard';
@@ -41,8 +41,30 @@ export default function WeatherPage() {
 
   const currentLocation = locations.find((loc) => loc.id === currentLocationId);
 
+  // カレンダーイベントを取得する関数
+  const fetchCalendarEvents = useCallback(async () => {
+    setCalendarLoading(true);
+    try {
+      const res = await fetch('/api/calendar/events');
+      if (res.ok) {
+        const data = await res.json();
+        // Google Calendar APIのイベントをWeatherページの型に変換
+        const adaptedEvents = adaptGoogleCalendarEvents(data.events || []);
+        setCalendarEvents(adaptedEvents);
+      } else {
+        console.error('カレンダーイベントの取得に失敗しました');
+        setCalendarEvents([]);
+      }
+    } catch (error) {
+      console.error('カレンダーイベントの取得エラー:', error);
+      setCalendarEvents([]);
+    } finally {
+      setCalendarLoading(false);
+    }
+  }, []);
+
   // 天気データを取得する関数
-  const fetchWeatherData = async () => {
+  const fetchWeatherData = useCallback(async () => {
     if (!currentLocation) return;
 
     setLoading(true);
@@ -103,13 +125,13 @@ export default function WeatherPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentLocation]);
 
   // 初回読み込みと地点変更時にデータを取得
   useEffect(() => {
     fetchWeatherData();
     fetchCalendarEvents();
-  }, [currentLocation]);
+  }, [fetchWeatherData, fetchCalendarEvents]);
 
   // 30分ごとに自動更新
   useEffect(() => {
@@ -121,29 +143,7 @@ export default function WeatherPage() {
     ); // 30分 = 30 * 60 * 1000ミリ秒
 
     return () => clearInterval(interval);
-  }, [currentLocation]);
-
-  // カレンダーイベントを取得する関数
-  const fetchCalendarEvents = async () => {
-    setCalendarLoading(true);
-    try {
-      const res = await fetch('/api/calendar/events');
-      if (res.ok) {
-        const data = await res.json();
-        // Google Calendar APIのイベントをWeatherページの型に変換
-        const adaptedEvents = adaptGoogleCalendarEvents(data.events || []);
-        setCalendarEvents(adaptedEvents);
-      } else {
-        console.error('カレンダーイベントの取得に失敗しました');
-        setCalendarEvents([]);
-      }
-    } catch (error) {
-      console.error('カレンダーイベントの取得エラー:', error);
-      setCalendarEvents([]);
-    } finally {
-      setCalendarLoading(false);
-    }
-  };
+  }, [fetchWeatherData]);
 
   // 手動更新ハンドラー
   const handleRefresh = () => {
