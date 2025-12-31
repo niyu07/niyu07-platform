@@ -46,6 +46,14 @@ export default function TransactionInput({
     null
   );
   const replaceFileInputRef = useRef<HTMLInputElement>(null);
+  const [customIncomeCategories, setCustomIncomeCategories] = useState<
+    string[]
+  >([]);
+  const [customExpenseCategories, setCustomExpenseCategories] = useState<
+    string[]
+  >([]);
+  const [showCategoryInput, setShowCategoryInput] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   // 編集モード時にフォームを初期化
   useEffect(() => {
@@ -80,9 +88,28 @@ export default function TransactionInput({
     }
   }, [editingTransaction, initialType]);
 
+  // カスタムカテゴリを取得
+  useEffect(() => {
+    const loadCustomCategories = () => {
+      try {
+        const savedIncome = localStorage.getItem('customIncomeCategories');
+        const savedExpense = localStorage.getItem('customExpenseCategories');
+        if (savedIncome) {
+          setCustomIncomeCategories(JSON.parse(savedIncome));
+        }
+        if (savedExpense) {
+          setCustomExpenseCategories(JSON.parse(savedExpense));
+        }
+      } catch (error) {
+        console.error('Error loading custom categories:', error);
+      }
+    };
+    loadCustomCategories();
+  }, []);
+
   // カテゴリの選択肢
-  const incomeCategories = ['業務委託', '広告', '販売', 'その他'];
-  const expenseCategories = [
+  const defaultIncomeCategories = ['業務委託', '広告', '販売', 'その他'];
+  const defaultExpenseCategories = [
     '消耗品費',
     '通信費',
     '会議費',
@@ -92,6 +119,15 @@ export default function TransactionInput({
     '水道光熱費',
     '交際費',
     '雑費',
+  ];
+
+  const incomeCategories = [
+    ...defaultIncomeCategories,
+    ...customIncomeCategories,
+  ];
+  const expenseCategories = [
+    ...defaultExpenseCategories,
+    ...customExpenseCategories,
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -426,6 +462,58 @@ export default function TransactionInput({
     }
   };
 
+  // カテゴリ選択時の処理
+  const handleCategoryChange = (value: string) => {
+    if (value === '__ADD_NEW__') {
+      setShowCategoryInput(true);
+      setCategory('');
+    } else {
+      setCategory(value);
+      setShowCategoryInput(false);
+    }
+  };
+
+  // 新しいカテゴリを追加
+  const handleAddCategory = () => {
+    if (!newCategoryName.trim()) {
+      alert('カテゴリ名を入力してください');
+      return;
+    }
+
+    const isIncome = transactionType === '収入';
+    const currentCategories = isIncome
+      ? incomeCategories
+      : expenseCategories;
+
+    // 重複チェック
+    if (currentCategories.includes(newCategoryName.trim())) {
+      alert('このカテゴリは既に存在します');
+      return;
+    }
+
+    // カスタムカテゴリに追加
+    if (isIncome) {
+      const updated = [...customIncomeCategories, newCategoryName.trim()];
+      setCustomIncomeCategories(updated);
+      localStorage.setItem('customIncomeCategories', JSON.stringify(updated));
+    } else {
+      const updated = [...customExpenseCategories, newCategoryName.trim()];
+      setCustomExpenseCategories(updated);
+      localStorage.setItem('customExpenseCategories', JSON.stringify(updated));
+    }
+
+    // 追加したカテゴリを選択
+    setCategory(newCategoryName.trim());
+    setNewCategoryName('');
+    setShowCategoryInput(false);
+  };
+
+  // カテゴリ追加をキャンセル
+  const handleCancelAddCategory = () => {
+    setShowCategoryInput(false);
+    setNewCategoryName('');
+  };
+
   const recentClients = [
     '株式会社A',
     '株式会社B',
@@ -509,22 +597,65 @@ export default function TransactionInput({
               カテゴリ
               <span className="text-red-500 ml-1">*</span>
             </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">選択してください</option>
-              {(transactionType === '収入'
-                ? incomeCategories
-                : expenseCategories
-              ).map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
+            {!showCategoryInput ? (
+              <select
+                value={category}
+                onChange={(e) => handleCategoryChange(e.target.value)}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">選択してください</option>
+                {(transactionType === '収入'
+                  ? incomeCategories
+                  : expenseCategories
+                ).map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+                <option value="__ADD_NEW__" className="text-blue-600 font-medium">
+                  + 新しいカテゴリを追加
                 </option>
-              ))}
-            </select>
+              </select>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    placeholder="新しいカテゴリ名を入力"
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddCategory();
+                      } else if (e.key === 'Escape') {
+                        handleCancelAddCategory();
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddCategory}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    追加
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelAddCategory}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Enterキーで追加、Escキーでキャンセル
+                </p>
+              </div>
+            )}
           </div>
 
           {/* 取引先 */}
