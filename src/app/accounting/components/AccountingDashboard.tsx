@@ -1,12 +1,8 @@
 'use client';
 
-import {
-  mockAccountingKPI,
-  mockMonthlyFinancialData,
-  mockTransactions,
-} from '../../data/mockData';
-import { Transaction } from '../../types';
-import { useState } from 'react';
+import { Transaction, AccountingKPI, MonthlyFinancialData } from '../../types';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 
 type DisplayMode = '利益' | '売上' | '経費';
 
@@ -28,12 +24,64 @@ export default function AccountingDashboard({
   onNavigateToInput,
   onNavigateToTab,
 }: AccountingDashboardProps) {
+  const { data: session } = useSession();
   const [displayMode, setDisplayMode] = useState<DisplayMode>('利益');
-  const [selectedYear, setSelectedYear] = useState<number>(2024);
+  const [selectedYear, setSelectedYear] = useState<number>(
+    new Date().getFullYear()
+  );
+  const [kpi, setKpi] = useState<AccountingKPI | null>(null);
+  const [monthlyData, setMonthlyData] = useState<MonthlyFinancialData[]>([]);
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>(
+    []
+  );
+  const [isLoading, setIsLoading] = useState(true);
 
-  const kpi = mockAccountingKPI;
-  const monthlyData = mockMonthlyFinancialData;
-  const recentTransactions = mockTransactions.slice(0, 5);
+  // データ取得
+  useEffect(() => {
+    if (!session?.user?.email) {
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+
+        // KPIデータを取得
+        const kpiResponse = await fetch(
+          `/api/accounting/kpi?userId=${session.user.email}&year=${selectedYear}`
+        );
+        if (kpiResponse.ok) {
+          const kpiData = await kpiResponse.json();
+          setKpi(kpiData);
+        }
+
+        // 月別データを取得
+        const monthlyResponse = await fetch(
+          `/api/accounting/monthly-data?userId=${session.user.email}&year=${selectedYear}`
+        );
+        if (monthlyResponse.ok) {
+          const monthlyDataResult = await monthlyResponse.json();
+          setMonthlyData(monthlyDataResult);
+        }
+
+        // 最近の取引を取得
+        const transactionsResponse = await fetch(
+          `/api/accounting/transactions?userId=${session.user.email}`
+        );
+        if (transactionsResponse.ok) {
+          const transactionsData = await transactionsResponse.json();
+          setRecentTransactions(transactionsData.slice(0, 5));
+        }
+      } catch (error) {
+        console.error('Error fetching accounting data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [session, selectedYear]);
 
   // グラフの最大値を計算
   const maxValue = Math.max(
@@ -59,6 +107,48 @@ export default function AccountingDashboard({
   const getTransactionColor = (transaction: Transaction): string => {
     return transaction.type === '収入' ? 'text-green-600' : 'text-red-600';
   };
+
+  // ローディング中の表示
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">データを読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ログインしていない場合
+  if (!session?.user) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">
+            ログインして会計データを管理しましょう
+          </p>
+          <button
+            onClick={() => (window.location.href = '/api/auth/signin')}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            ログイン
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // データがない場合
+  if (!kpi) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <p className="text-gray-600">データの読み込みに失敗しました</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -149,8 +239,15 @@ export default function AccountingDashboard({
             onChange={(e) => setSelectedYear(Number(e.target.value))}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value={2024}>2024年</option>
-            <option value={2023}>2023年</option>
+            <option value={new Date().getFullYear()}>
+              {new Date().getFullYear()}年
+            </option>
+            <option value={new Date().getFullYear() - 1}>
+              {new Date().getFullYear() - 1}年
+            </option>
+            <option value={new Date().getFullYear() - 2}>
+              {new Date().getFullYear() - 2}年
+            </option>
           </select>
         </div>
 
@@ -266,7 +363,11 @@ export default function AccountingDashboard({
                   className="border-b border-gray-100 hover:bg-gray-50"
                 >
                   <td className="py-3 px-4 text-sm text-gray-900">
-                    {transaction.date}
+                    {new Date(transaction.date).toLocaleDateString('ja-JP', {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                    })}
                   </td>
                   <td className="py-3 px-4">
                     <span
