@@ -26,6 +26,8 @@
     "@prisma/client": "^5.22.0",
     "@supabase/supabase-js": "^2.89.0",
     "googleapis": "^169.0.0",
+    "jspdf": "^3.0.4",
+    "jspdf-autotable": "^5.0.2",
     "next": "16.1.0",
     "next-auth": "^4.24.13",
     "pg": "^8.16.3",
