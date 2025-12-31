@@ -36,10 +36,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (files.length === 0) {
-      return NextResponse.json(
-        { error: 'No files provided' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'No files provided' }, { status: 400 });
     }
 
     console.log(

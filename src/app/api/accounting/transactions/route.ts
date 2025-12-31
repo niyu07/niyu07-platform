@@ -66,11 +66,11 @@ export async function GET(request: NextRequest) {
     });
 
     if (!user) {
-      console.error('[GET /api/accounting/transactions] User not found:', userId);
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
+      console.error(
+        '[GET /api/accounting/transactions] User not found:',
+        userId
       );
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     // whereのuserIdを実際のUser IDに置き換え
@@ -173,7 +173,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-      console.error('[POST /api/accounting/transactions] User not found:', userId);
+      console.error(
+        '[POST /api/accounting/transactions] User not found:',
+        userId
+      );
       return NextResponse.json(
         {
           error: 'User not found',

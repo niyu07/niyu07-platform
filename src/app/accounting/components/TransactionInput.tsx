@@ -3,11 +3,7 @@
 import { Transaction, TransactionType } from '../../types';
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import {
-  validateFile,
-  MAX_FILE_SIZE,
-  ALLOWED_FILE_TYPES,
-} from '@/lib/upload';
+import { validateFile, MAX_FILE_SIZE, ALLOWED_FILE_TYPES } from '@/lib/upload';
 
 interface TransactionInputProps {
   initialType?: TransactionType;
@@ -67,7 +63,10 @@ export default function TransactionInput({
       setMemo(editingTransaction.memo || '');
 
       // 既存ファイルを設定
-      if (editingTransaction.attachments && editingTransaction.attachments.length > 0) {
+      if (
+        editingTransaction.attachments &&
+        editingTransaction.attachments.length > 0
+      ) {
         setExistingFiles(editingTransaction.attachments);
       } else {
         setExistingFiles([]);
@@ -188,7 +187,9 @@ export default function TransactionInput({
         const error = await response.json();
         console.error('API Error:', error);
         throw new Error(
-          error.details || error.error || `取引の${isEdit ? '更新' : '登録'}に失敗しました`
+          error.details ||
+            error.error ||
+            `取引の${isEdit ? '更新' : '登録'}に失敗しました`
         );
       }
 
@@ -241,10 +242,12 @@ export default function TransactionInput({
 
         const uploadData = await uploadResponse.json();
         console.log('Files uploaded:', uploadData.files);
-        newAttachments = uploadData.files.map((f: { filePath: string; fileName: string }) => ({
-          filePath: f.filePath,
-          fileName: f.fileName,
-        }));
+        newAttachments = uploadData.files.map(
+          (f: { filePath: string; fileName: string }) => ({
+            filePath: f.filePath,
+            fileName: f.fileName,
+          })
+        );
       }
 
       // 編集モードの場合、既存ファイル + 新しいファイルで更新
@@ -481,9 +484,7 @@ export default function TransactionInput({
     }
 
     const isIncome = transactionType === '収入';
-    const currentCategories = isIncome
-      ? incomeCategories
-      : expenseCategories;
+    const currentCategories = isIncome ? incomeCategories : expenseCategories;
 
     // 重複チェック
     if (currentCategories.includes(newCategoryName.trim())) {
@@ -613,7 +614,10 @@ export default function TransactionInput({
                     {cat}
                   </option>
                 ))}
-                <option value="__ADD_NEW__" className="text-blue-600 font-medium">
+                <option
+                  value="__ADD_NEW__"
+                  className="text-blue-600 font-medium"
+                >
                   + 新しいカテゴリを追加
                 </option>
               </select>
