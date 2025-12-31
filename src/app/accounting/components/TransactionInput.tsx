@@ -1,15 +1,23 @@
 'use client';
 
-import { TransactionType } from '../../types';
-import { useState } from 'react';
+import { Transaction, TransactionType } from '../../types';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 
 interface TransactionInputProps {
   initialType?: TransactionType;
+  editingTransaction?: Transaction | null;
+  onSuccess?: () => void;
+  onCancelEdit?: () => void;
 }
 
 export default function TransactionInput({
   initialType = '収入',
+  editingTransaction = null,
+  onSuccess,
+  onCancelEdit,
 }: TransactionInputProps) {
+  const { data: session } = useSession();
   const [transactionType, setTransactionType] =
     useState<TransactionType>(initialType);
   const [date, setDate] = useState<string>(
@@ -17,22 +25,121 @@ export default function TransactionInput({
   );
   const [detail, setDetail] = useState<string>('');
   const [amount, setAmount] = useState<string>('');
+  const [category, setCategory] = useState<string>('');
   const [client, setClient] = useState<string>('');
   const [clientType, setClientType] = useState<'法人' | '個人'>('法人');
   const [memo, setMemo] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // 編集モード時にフォームを初期化
+  useEffect(() => {
+    if (editingTransaction) {
+      setTransactionType(editingTransaction.type);
+      setDate(editingTransaction.date.split('T')[0]);
+      setDetail(editingTransaction.detail);
+      setAmount(editingTransaction.amount.toString());
+      setCategory(editingTransaction.category);
+      setClient(editingTransaction.client || '');
+      setMemo(editingTransaction.memo || '');
+    } else {
+      // 新規作成モードに戻った時はフォームをリセット
+      setTransactionType(initialType);
+      setDate(new Date().toISOString().split('T')[0]);
+      setDetail('');
+      setAmount('');
+      setCategory('');
+      setClient('');
+      setMemo('');
+    }
+  }, [editingTransaction, initialType]);
+
+  // カテゴリの選択肢
+  const incomeCategories = ['業務委託', '広告', '販売', 'その他'];
+  const expenseCategories = [
+    '消耗品費',
+    '通信費',
+    '会議費',
+    '旅費交通費',
+    '外注費',
+    '地代家賃',
+    '水道光熱費',
+    '交際費',
+    '雑費',
+  ];
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Transaction submitted:', {
-      transactionType,
-      date,
-      detail,
-      amount,
-      client,
-      clientType,
-      memo,
-    });
-    alert('売上を登録しました！');
+
+    if (!session?.user?.email) {
+      alert('ログインが必要です');
+      return;
+    }
+
+    if (!category) {
+      alert('カテゴリを選択してください');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const isEdit = !!editingTransaction;
+      const url = isEdit
+        ? `/api/accounting/transactions?id=${editingTransaction.id}`
+        : '/api/accounting/transactions';
+      const method = isEdit ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: session.user.email,
+          date,
+          type: transactionType,
+          category,
+          detail,
+          amount: parseInt(amount, 10),
+          clientName: client || null,
+          clientType,
+          memo,
+          taxCategory: '課税',
+          attachments: [],
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(
+          error.details || `取引の${isEdit ? '更新' : '登録'}に失敗しました`
+        );
+      }
+
+      const data = await response.json();
+      console.log(`Transaction ${isEdit ? 'updated' : 'created'}:`, data);
+
+      // フォームをリセット
+      setDetail('');
+      setAmount('');
+      setCategory('');
+      setClient('');
+      setMemo('');
+
+      alert(`${transactionType}を${isEdit ? '更新' : '登録'}しました！`);
+
+      // 親コンポーネントに成功を通知
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error) {
+      console.error('Error submitting transaction:', error);
+      alert(
+        error instanceof Error ? error.message : '取引の登録に失敗しました'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDraft = () => {
@@ -49,6 +156,28 @@ export default function TransactionInput({
   return (
     <div className="max-w-4xl mx-auto">
       <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200">
+        {/* 編集モード時のヘッダー */}
+        {editingTransaction && (
+          <div className="mb-6 pb-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">取引を編集</h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  取引ID: {editingTransaction.id}
+                </p>
+              </div>
+              {onCancelEdit && (
+                <button
+                  onClick={onCancelEdit}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  キャンセル
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* 種類切り替え */}
         <div className="flex gap-4 mb-8">
           <button
@@ -92,6 +221,30 @@ export default function TransactionInput({
             <p className="text-xs text-gray-500 mt-1">
               例: 2025年12月25日 (木)
             </p>
+          </div>
+
+          {/* カテゴリ */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              カテゴリ
+              <span className="text-red-500 ml-1">*</span>
+            </label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">選択してください</option>
+              {(transactionType === '収入'
+                ? incomeCategories
+                : expenseCategories
+              ).map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* 取引先 */}
@@ -212,18 +365,30 @@ export default function TransactionInput({
 
           {/* ボタン */}
           <div className="flex gap-4 pt-4">
-            <button
-              type="button"
-              onClick={handleDraft}
-              className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
-            >
-              下書き保存
-            </button>
+            {!editingTransaction && (
+              <button
+                type="button"
+                onClick={handleDraft}
+                disabled={isSubmitting}
+                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                下書き保存
+              </button>
+            )}
             <button
               type="submit"
-              className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors shadow-lg"
+              disabled={isSubmitting}
+              className={`flex-1 px-6 py-3 text-white rounded-lg font-medium transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                transactionType === '収入'
+                  ? 'bg-green-600 hover:bg-green-700'
+                  : 'bg-red-600 hover:bg-red-700'
+              }`}
             >
-              売上を登録
+              {isSubmitting
+                ? `${editingTransaction ? '更新' : '登録'}中...`
+                : editingTransaction
+                  ? `${transactionType}を更新`
+                  : `${transactionType}を登録`}
             </button>
           </div>
         </form>

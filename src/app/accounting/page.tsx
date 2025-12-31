@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Transaction } from '../types';
 import AccountingDashboard from './components/AccountingDashboard';
 import TransactionInput from './components/TransactionInput';
 import TransactionList from './components/TransactionList';
@@ -23,6 +24,9 @@ export default function AccountingPage() {
   const [transactionType, setTransactionType] = useState<'収入' | '経費'>(
     '収入'
   );
+  const [editingTransaction, setEditingTransaction] =
+    useState<Transaction | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const tabs: TabType[] = [
     'ダッシュボード',
@@ -45,19 +49,44 @@ export default function AccountingPage() {
     setActiveTab(tab);
   };
 
+  const handleEditTransaction = (transaction: Transaction) => {
+    setEditingTransaction(transaction);
+    setTransactionType(transaction.type);
+    setActiveTab('取引入力');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTransaction(null);
+  };
+
+  const handleTransactionSuccess = () => {
+    setEditingTransaction(null);
+    setRefreshKey((prev) => prev + 1); // データを再取得するためのキー
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'ダッシュボード':
         return (
           <AccountingDashboard
+            key={refreshKey}
             onNavigateToInput={handleNavigateToInput}
             onNavigateToTab={handleNavigateToTab}
           />
         );
       case '取引入力':
-        return <TransactionInput initialType={transactionType} />;
+        return (
+          <TransactionInput
+            initialType={transactionType}
+            editingTransaction={editingTransaction}
+            onSuccess={handleTransactionSuccess}
+            onCancelEdit={handleCancelEdit}
+          />
+        );
       case '取引一覧':
-        return <TransactionList />;
+        return (
+          <TransactionList key={refreshKey} onEdit={handleEditTransaction} />
+        );
       case '扶養シミュレーター':
         return <TaxSimulator />;
       case 'レポート':
@@ -69,6 +98,7 @@ export default function AccountingPage() {
       default:
         return (
           <AccountingDashboard
+            key={refreshKey}
             onNavigateToInput={handleNavigateToInput}
             onNavigateToTab={handleNavigateToTab}
           />

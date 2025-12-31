@@ -31,6 +31,12 @@ model User {
   workLocations    WorkLocation[]
   memos            Memo[]
 
+  // 会計管理
+  clients              Client[]
+  transactions         Transaction[]
+  accountingSettings   AccountingSettings?
+  monthlyFinancialData MonthlyFinancialData[]
+
   @@map("users")
 }
 
@@ -245,4 +251,94 @@ model Memo {
 
   @@index([userId, createdAt])
   @@map("memos")
+}
+
+// ========================================
+// 会計管理システム
+// ========================================
+
+// 取引先マスタ
+model Client {
+  id           String   @id @default(cuid())
+  userId       String
+  name         String // 取引先名（例: 株式会社A）
+  type         String // '法人' | '個人'
+  contactEmail String? // 連絡先メールアドレス
+  contactPhone String? // 連絡先電話番号
+  address      String? @db.Text // 住所
+  memo         String? @db.Text // メモ
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@index([userId])
+  @@index([userId, isActive])
+  @@map("clients")
+}
+
+// 取引（収入・経費）
+model Transaction {
+  id          String   @id @default(cuid())
+  userId      String
+  date        DateTime @db.Date // 取引日
+  type        String // '収入' | '経費'
+  category    String // 収入: '業務委託' | '広告' | '販売' | 'その他', 経費: '消耗品費' | '通信費' 等
+  detail      String // 取引の詳細（例: クライアントA Webデザイン）
+  amount      Int // 金額（円）
+  clientId    String? // 取引先ID（オプション）
+  taxCategory String   @default("課税") // '課税' | '不課税' | '免税' | '対象外'
+  memo        String? @db.Text // メモ
+  attachments String[] // Supabase Storage のファイルパス配列
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@index([userId, date])
+  @@index([userId, type])
+  @@index([userId, category])
+  @@map("transactions")
+}
+
+// 会計設定
+model AccountingSettings {
+  id                       String   @id @default(cuid())
+  userId                   String   @unique
+  fiscalYearStart          Int      @default(1) // 期首月（1-12）
+  blueReturnDeduction      Int      @default(650000) // 青色申告特別控除額（円）
+  basicDeduction           Int      @default(480000) // 基礎控除（円）
+  dependentIncomeLimit     Int      @default(480000) // 扶養ライン目安（円）
+  currencyFormat           String   @default("¥") // '¥' | 'JPY'
+  displayFormat            String   @default("normal") // 'normal' | 'k' | '万'
+  customIncomeCategories   String[] // カスタム収入カテゴリ
+  customExpenseCategories  String[] // カスタム経費カテゴリ
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("accounting_settings")
+}
+
+// 月別収支データ（集計キャッシュ用）
+model MonthlyFinancialData {
+  id        String   @id @default(cuid())
+  userId    String
+  year      Int // 年（例: 2024）
+  month     Int // 月（1-12）
+  revenue   Int      @default(0) // 売上（円）
+  expense   Int      @default(0) // 経費（円）
+  profit    Int      @default(0) // 利益（円）= revenue - expense
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, year, month])
+  @@index([userId, year])
+  @@map("monthly_financial_data")
 }
