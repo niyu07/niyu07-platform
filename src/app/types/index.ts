@@ -261,6 +261,12 @@ export type ExpenseAccountCategory =
   | '交際費'
   | '雑費';
 
+// 添付ファイルの型定義
+export interface Attachment {
+  filePath: string;
+  fileName: string;
+}
+
 // 取引の型定義
 export interface Transaction {
   id: string;
@@ -272,7 +278,7 @@ export interface Transaction {
   client?: string; // 取引先
   taxCategory?: TaxCategory;
   memo?: string;
-  attachments?: string[]; // ファイルパス
+  attachments?: Attachment[]; // ファイル情報
   createdAt: string;
   updatedAt: string;
 }
