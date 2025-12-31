@@ -4,7 +4,12 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 
 // 期間プリセットの定義
-type PeriodPreset = 'thisMonth' | 'lastMonth' | 'thisYear' | 'lastYear' | 'custom';
+type PeriodPreset =
+  | 'thisMonth'
+  | 'lastMonth'
+  | 'thisYear'
+  | 'lastYear'
+  | 'custom';
 
 // レポートデータの型定義
 interface ProfitLossData {
@@ -102,6 +107,7 @@ export default function Reports() {
   // 初期化: 今月のデータを設定
   useEffect(() => {
     handlePresetChange('thisMonth');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // レポートデータを取得
@@ -359,10 +365,11 @@ export default function Reports() {
                                   (sum, c) => sum + c.percentage,
                                   0
                                 );
-                              const startAngle = reportData.category!.expenseCategories
-                                .slice(0, index)
+                              const startAngle = reportData
+                                .category!.expenseCategories.slice(0, index)
                                 .reduce(
-                                  (sum, c) => sum + (c.percentage / total) * 360,
+                                  (sum, c) =>
+                                    sum + (c.percentage / total) * 360,
                                   0
                                 );
                               const endAngle =
@@ -382,7 +389,8 @@ export default function Reports() {
                               const x4 = 100 + innerRadius * Math.cos(startRad);
                               const y4 = 100 + innerRadius * Math.sin(startRad);
 
-                              const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+                              const largeArc =
+                                endAngle - startAngle > 180 ? 1 : 0;
 
                               return (
                                 <path

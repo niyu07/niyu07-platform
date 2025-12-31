@@ -151,9 +151,7 @@ async function generateProfitLossReport(
       amount: data.amount,
       transactions: data.transactions,
       contribution:
-        totalRevenue > 0
-          ? Math.round((data.amount / totalRevenue) * 100)
-          : 0,
+        totalRevenue > 0 ? Math.round((data.amount / totalRevenue) * 100) : 0,
     }))
     .sort((a, b) => b.amount - a.amount)
     .slice(0, 10)
