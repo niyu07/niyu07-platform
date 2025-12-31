@@ -59,6 +59,23 @@ export async function GET(request: NextRequest) {
       where.category = category;
     }
 
+    // userIdがemailの場合、User IDに変換
+    const user = await prisma.user.findUnique({
+      where: { email: userId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      console.error(
+        '[GET /api/accounting/transactions] User not found:',
+        userId
+      );
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // whereのuserIdを実際のUser IDに置き換え
+    where.userId = user.id;
+
     console.log(
       '[GET /api/accounting/transactions] Query where clause:',
       where
@@ -75,11 +92,17 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    // フロントエンド用にデータを整形（clientオブジェクトをclient名に変換）
+    const formattedTransactions = transactions.map((t) => ({
+      ...t,
+      client: t.client?.name || null,
+    }));
+
     console.log(
       '[GET /api/accounting/transactions] Found transactions:',
-      transactions.length
+      formattedTransactions.length
     );
-    return NextResponse.json(transactions);
+    return NextResponse.json(formattedTransactions);
   } catch (error) {
     console.error('[GET /api/accounting/transactions] Error details:', {
       name: error instanceof Error ? error.name : 'Unknown',
@@ -125,14 +148,45 @@ export async function POST(request: NextRequest) {
       !detail ||
       amount === undefined
     ) {
+      console.error('[POST /api/accounting/transactions] Validation failed:', {
+        userId: !!userId,
+        date: !!date,
+        type: !!type,
+        category: !!category,
+        detail: !!detail,
+        amount: amount !== undefined,
+      });
       return NextResponse.json(
         {
           error:
             'userId, date, type, category, detail, and amount are required',
+          details: 'Missing required fields',
         },
         { status: 400 }
       );
     }
+
+    // userIdがemailの場合、User IDに変換
+    const user = await prisma.user.findUnique({
+      where: { email: userId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      console.error(
+        '[POST /api/accounting/transactions] User not found:',
+        userId
+      );
+      return NextResponse.json(
+        {
+          error: 'User not found',
+          details: `User with email ${userId} not found`,
+        },
+        { status: 404 }
+      );
+    }
+
+    const actualUserId = user.id;
 
     // 日付を正規化
     const transactionDate = new Date(date);
@@ -144,7 +198,7 @@ export async function POST(request: NextRequest) {
       // 既存の取引先を検索
       let client = await prisma.client.findFirst({
         where: {
-          userId,
+          userId: actualUserId,
           name: clientName,
         },
       });
@@ -157,7 +211,7 @@ export async function POST(request: NextRequest) {
         );
         client = await prisma.client.create({
           data: {
-            userId,
+            userId: actualUserId,
             name: clientName,
             type: clientType || '法人',
           },
@@ -170,7 +224,7 @@ export async function POST(request: NextRequest) {
     // 取引を作成
     const transaction = await prisma.transaction.create({
       data: {
-        userId,
+        userId: actualUserId,
         date: transactionDate,
         type,
         category,
@@ -192,7 +246,7 @@ export async function POST(request: NextRequest) {
     );
 
     // 月別集計データを更新
-    await updateMonthlyFinancialData(userId, transactionDate);
+    await updateMonthlyFinancialData(actualUserId, transactionDate);
 
     return NextResponse.json(transaction, { status: 201 });
   } catch (error) {
