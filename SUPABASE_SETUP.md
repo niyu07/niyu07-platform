@@ -5,15 +5,18 @@
 ## 1. Supabaseプロジェクトの設定
 
 ### 1.1 Supabaseにログイン
+
 https://supabase.com にアクセスして、既存のプロジェクトを開きます。
 
 ### 1.2 API情報を取得
+
 1. 左サイドバーから「Project Settings」→「API」を選択
 2. 以下の情報をコピー:
    - `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
    - `anon public` キー → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 ### 1.3 環境変数を設定
+
 `.env`ファイルに以下を追加:
 
 ```bash
@@ -24,6 +27,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
 ## 2. Storage バケットの作成
 
 ### 2.1 バケットを作成
+
 1. 左サイドバーから「Storage」を選択
 2. 「Create a new bucket」をクリック
 3. 以下の設定でバケットを作成:
@@ -102,10 +106,12 @@ bucket_id = 'receipts' AND (auth.uid())::text = (storage.foldername(name))[1]
 現在、NextAuthを使用しているため、SupabaseのJWT認証と統合する場合は追加の設定が必要です。
 
 ### 簡易的な方法
+
 開発環境では、Supabase Storage APIを直接使用し、サーバーサイドでファイル操作を行うことで、RLSを回避できます。
 現在の実装では、この方法を採用しています。
 
 ### 本番環境での推奨
+
 本番環境では、以下のいずれかを検討してください:
 
 1. **NextAuthとSupabase Authの統合**
@@ -118,17 +124,20 @@ bucket_id = 'receipts' AND (auth.uid())::text = (storage.foldername(name))[1]
 ## 4. 動作確認
 
 ### 4.1 アプリケーションを起動
+
 ```bash
 npm run dev
 ```
 
 ### 4.2 ファイルアップロードをテスト
+
 1. 会計管理ページ(`/accounting`)にアクセス
 2. 取引を登録する際に、領収書・請求書のファイルを選択
 3. ドラッグ&ドロップまたはクリックでファイルを選択
 4. フォームを送信
 
 ### 4.3 Supabaseで確認
+
 1. Supabase管理画面の「Storage」→「receipts」を開く
 2. `userId/transactionId/filename`の形式でファイルが保存されているか確認
 
@@ -157,12 +166,15 @@ receipts/
 ## 7. トラブルシューティング
 
 ### エラー: "Missing env.NEXT_PUBLIC_SUPABASE_URL"
+
 → 環境変数が設定されていません。`.env`ファイルを確認してください。
 
 ### エラー: "new row violates row-level security policy"
+
 → RLSポリシーの設定を確認してください。
 
 ### ファイルのアップロードが失敗する
+
 → ブラウザのコンソールでエラーメッセージを確認してください。
 
 ## 8. 参考リンク
