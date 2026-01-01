@@ -27,6 +27,11 @@ export default function Sidebar({
     { name: '学習ログ', icon: '📚', href: '/study-log' },
     { name: '天気', icon: '🌤️', href: '/weather' },
     { name: '勤怠管理', icon: '⏰', href: '/attendance' },
+    {
+      name: '扶養シミュレーション',
+      icon: '💵',
+      href: '/tax/dependent-simulation',
+    },
   ];
 
   const handleAddMemo = async () => {
