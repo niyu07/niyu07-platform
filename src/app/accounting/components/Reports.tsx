@@ -62,6 +62,20 @@ export default function Reports() {
     monthly: null,
   });
 
+  // 確定申告データ出力の状態
+  const [showTaxFilingExport, setShowTaxFilingExport] = useState(false);
+  const [selectedYear, setSelectedYear] = useState<number>(
+    new Date().getFullYear()
+  );
+  const [exportFormat, setExportFormat] = useState<'pdf' | 'csv'>('pdf');
+  const [exportOptions, setExportOptions] = useState({
+    includeSummary: true,
+    includeDetailedTransactions: false,
+    includeExpenseBreakdown: true,
+    includeClientBreakdown: true,
+    includeMonthlyBreakdown: true,
+  });
+
   // 期間プリセットから日付範囲を計算
   const getPeriodDates = (preset: PeriodPreset): { start: Date; end: Date } => {
     const now = new Date();
@@ -172,6 +186,55 @@ export default function Reports() {
     }
   };
 
+  // 確定申告データ出力処理
+  const handleTaxFilingExport = async () => {
+    if (!session?.user?.email) return;
+
+    try {
+      const params = new URLSearchParams({
+        userId: session.user.email,
+        year: selectedYear.toString(),
+        format: exportFormat,
+        includeSummary: exportOptions.includeSummary.toString(),
+        includeDetailedTransactions:
+          exportOptions.includeDetailedTransactions.toString(),
+        includeExpenseBreakdown:
+          exportOptions.includeExpenseBreakdown.toString(),
+        includeClientBreakdown: exportOptions.includeClientBreakdown.toString(),
+        includeMonthlyBreakdown:
+          exportOptions.includeMonthlyBreakdown.toString(),
+      });
+
+      const response = await fetch(`/api/tax/tax-filing-export?${params}`);
+      if (!response.ok) throw new Error('Failed to export tax filing data');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `確定申告データ_${selectedYear}.${exportFormat}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      setShowTaxFilingExport(false);
+    } catch (error) {
+      console.error('Error exporting tax filing data:', error);
+      alert('確定申告データの出力に失敗しました');
+    }
+  };
+
+  // 年度リストの生成
+  const generateYearOptions = () => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let i = 0; i < 5; i++) {
+      years.push(currentYear - i);
+    }
+    return years;
+  };
+
   const maxMonthlyValue = reportData.monthly
     ? Math.max(
         ...reportData.monthly.map((d) =>
@@ -182,6 +245,175 @@ export default function Reports() {
 
   return (
     <div className="space-y-6">
+      {/* 確定申告データ出力モーダル */}
+      {showTaxFilingExport && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">
+                確定申告データ出力
+              </h2>
+              <button
+                onClick={() => setShowTaxFilingExport(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* 年度選択 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  対象年度
+                </label>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {generateYearOptions().map((year) => (
+                    <option key={year} value={year}>
+                      {year}年
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 出力形式 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  出力形式
+                </label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="format"
+                      value="pdf"
+                      checked={exportFormat === 'pdf'}
+                      onChange={() => setExportFormat('pdf')}
+                      className="w-4 h-4 text-blue-600"
+                    />
+                    <span className="text-gray-700">PDF</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="format"
+                      value="csv"
+                      checked={exportFormat === 'csv'}
+                      onChange={() => setExportFormat('csv')}
+                      className="w-4 h-4 text-blue-600"
+                    />
+                    <span className="text-gray-700">CSV</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* 出力項目のカスタマイズ */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  出力項目
+                </label>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={exportOptions.includeSummary}
+                      onChange={(e) =>
+                        setExportOptions({
+                          ...exportOptions,
+                          includeSummary: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 text-blue-600 rounded"
+                    />
+                    <span className="text-gray-700">
+                      サマリー(総売上・総経費・利益)
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={exportOptions.includeExpenseBreakdown}
+                      onChange={(e) =>
+                        setExportOptions({
+                          ...exportOptions,
+                          includeExpenseBreakdown: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 text-blue-600 rounded"
+                    />
+                    <span className="text-gray-700">経費カテゴリ別内訳</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={exportOptions.includeClientBreakdown}
+                      onChange={(e) =>
+                        setExportOptions({
+                          ...exportOptions,
+                          includeClientBreakdown: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 text-blue-600 rounded"
+                    />
+                    <span className="text-gray-700">取引先別売上内訳</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={exportOptions.includeMonthlyBreakdown}
+                      onChange={(e) =>
+                        setExportOptions({
+                          ...exportOptions,
+                          includeMonthlyBreakdown: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 text-blue-600 rounded"
+                    />
+                    <span className="text-gray-700">月次収支内訳</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={exportOptions.includeDetailedTransactions}
+                      onChange={(e) =>
+                        setExportOptions({
+                          ...exportOptions,
+                          includeDetailedTransactions: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 text-blue-600 rounded"
+                    />
+                    <span className="text-gray-700">
+                      全取引明細(詳細データ)
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* アクションボタン */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setShowTaxFilingExport(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick={handleTaxFilingExport}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  出力
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ヘッダー・期間選択 */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -256,6 +488,13 @@ export default function Reports() {
           </div>
 
           <div className="flex gap-2">
+            <button
+              onClick={() => setShowTaxFilingExport(true)}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+            >
+              <span>📄</span>
+              確定申告データ出力
+            </button>
             <button
               onClick={handleExportPDF}
               disabled={!reportData.profitLoss}
