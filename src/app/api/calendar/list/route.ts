@@ -21,9 +21,13 @@ export async function GET() {
     return NextResponse.json({ calendars });
   } catch (error) {
     console.error('❌ Error fetching calendar list:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch calendar list';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Failed to fetch calendar list';
     return NextResponse.json(
-      { error: errorMessage, details: error instanceof Error ? error.stack : undefined },
+      {
+        error: errorMessage,
+        details: error instanceof Error ? error.stack : undefined,
+      },
       { status: 500 }
     );
   }

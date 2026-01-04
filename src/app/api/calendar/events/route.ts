@@ -29,7 +29,7 @@ export async function GET(request: Request) {
       userId: session.user.id,
       timeMin,
       timeMax,
-      calendarIds
+      calendarIds,
     });
 
     let events;
@@ -57,9 +57,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ events });
   } catch (error) {
     console.error('❌ Error fetching calendar events:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch calendar events';
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : 'Failed to fetch calendar events';
     return NextResponse.json(
-      { error: errorMessage, details: error instanceof Error ? error.stack : undefined },
+      {
+        error: errorMessage,
+        details: error instanceof Error ? error.stack : undefined,
+      },
       { status: 500 }
     );
   }

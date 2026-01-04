@@ -37,8 +37,12 @@ export function useGoogleTasks(taskListId: string = '@default') {
       const response = await fetch('/api/tasks');
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || `Failed to fetch task lists (${response.status})`;
-        console.error('API Error:', { status: response.status, error: errorData });
+        const errorMessage =
+          errorData.error || `Failed to fetch task lists (${response.status})`;
+        console.error('API Error:', {
+          status: response.status,
+          error: errorData,
+        });
         throw new Error(errorMessage);
       }
 
@@ -68,8 +72,12 @@ export function useGoogleTasks(taskListId: string = '@default') {
       const response = await fetch(url);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || `Failed to fetch tasks (${response.status})`;
-        console.error('API Error:', { status: response.status, error: errorData });
+        const errorMessage =
+          errorData.error || `Failed to fetch tasks (${response.status})`;
+        console.error('API Error:', {
+          status: response.status,
+          error: errorData,
+        });
         throw new Error(errorMessage);
       }
 

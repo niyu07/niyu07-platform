@@ -25,7 +25,11 @@ export async function GET(request: Request) {
     const taskListId = searchParams.get('taskListId');
     const fetchAll = searchParams.get('all') === 'true';
 
-    console.log('Tasks API GET:', { userId: session.user.id, fetchAll, taskListId });
+    console.log('Tasks API GET:', {
+      userId: session.user.id,
+      fetchAll,
+      taskListId,
+    });
 
     if (fetchAll) {
       // すべてのタスクリストからタスクを取得
@@ -45,9 +49,13 @@ export async function GET(request: Request) {
     }
   } catch (error) {
     console.error('❌ Error fetching tasks:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch tasks';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Failed to fetch tasks';
     return NextResponse.json(
-      { error: errorMessage, details: error instanceof Error ? error.stack : undefined },
+      {
+        error: errorMessage,
+        details: error instanceof Error ? error.stack : undefined,
+      },
       { status: 500 }
     );
   }

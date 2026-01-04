@@ -91,8 +91,12 @@ export function useGoogleCalendar() {
       const response = await fetch('/api/calendar/list');
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || `Failed to fetch calendars (${response.status})`;
-        console.error('API Error:', { status: response.status, error: errorData });
+        const errorMessage =
+          errorData.error || `Failed to fetch calendars (${response.status})`;
+        console.error('API Error:', {
+          status: response.status,
+          error: errorData,
+        });
         throw new Error(errorMessage);
       }
 
@@ -136,8 +140,12 @@ export function useGoogleCalendar() {
         const response = await fetch(`/api/calendar/events?${params}`);
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          const errorMessage = errorData.error || `Failed to fetch events (${response.status})`;
-          console.error('API Error:', { status: response.status, error: errorData });
+          const errorMessage =
+            errorData.error || `Failed to fetch events (${response.status})`;
+          console.error('API Error:', {
+            status: response.status,
+            error: errorData,
+          });
           throw new Error(errorMessage);
         }
 

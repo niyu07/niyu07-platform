@@ -55,7 +55,7 @@ export default function WeatherPage() {
         const errorData = await res.json().catch(() => ({}));
         console.error('カレンダーイベントの取得に失敗しました:', {
           status: res.status,
-          error: errorData
+          error: errorData,
         });
         setCalendarEvents([]);
       }

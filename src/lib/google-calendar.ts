@@ -56,7 +56,9 @@ export async function getCalendarClient(userId: string) {
     }
   } catch (error) {
     console.error('❌ トークンリフレッシュエラー:', error);
-    throw new Error('Google認証トークンの更新に失敗しました。再度ログインしてください。');
+    throw new Error(
+      'Google認証トークンの更新に失敗しました。再度ログインしてください。'
+    );
   }
 
   return google.calendar({ version: 'v3', auth: oauth2Client });

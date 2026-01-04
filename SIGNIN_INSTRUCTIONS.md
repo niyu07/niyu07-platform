@@ -7,11 +7,13 @@
 ### 1. ブラウザのクッキーをクリア
 
 **Chrome/Edge/Brave:**
+
 1. `Cmd + Shift + Delete` (Mac) または `Ctrl + Shift + Delete` (Windows)
 2. 「Cookieと他のサイトデータ」にチェック
 3. 「データを削除」をクリック
 
 **または、開発者ツールから:**
+
 1. `F12` または `Cmd + Option + I` で開発者ツールを開く
 2. 「Application」タブ → 「Cookies」 → `http://localhost:3000`
 3. すべてのクッキーを削除

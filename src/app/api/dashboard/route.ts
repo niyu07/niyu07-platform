@@ -63,7 +63,10 @@ export async function GET() {
     try {
       console.log('[Dashboard] Fetching calendar events for user:', userId);
       const calendarEvents = await getTodayEvents(userId);
-      console.log('[Dashboard] Retrieved calendar events:', calendarEvents.length);
+      console.log(
+        '[Dashboard] Retrieved calendar events:',
+        calendarEvents.length
+      );
 
       // Google Calendarのイベント形式を、EventTimelineコンポーネントが期待する形式に変換
       todayEvents = calendarEvents.map((event: CalendarEvent) => {

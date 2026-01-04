@@ -56,7 +56,9 @@ async function getTasksClient(userId: string) {
     }
   } catch (error) {
     console.error('❌ トークンリフレッシュエラー:', error);
-    throw new Error('Google認証トークンの更新に失敗しました。再度ログインしてください。');
+    throw new Error(
+      'Google認証トークンの更新に失敗しました。再度ログインしてください。'
+    );
   }
 
   return google.tasks({ version: 'v1', auth: oauth2Client });
