@@ -13,7 +13,7 @@ async function getTasksClient(userId: string) {
     },
   });
 
-  if (!account || !account.access_token) {
+  if (!account || !account.refresh_token) {
     throw new Error('Google認証情報が見つかりません');
   }
 
@@ -25,23 +25,39 @@ async function getTasksClient(userId: string) {
   oauth2Client.setCredentials({
     access_token: account.access_token,
     refresh_token: account.refresh_token,
+    expiry_date: account.expires_at ? account.expires_at * 1000 : undefined,
   });
 
-  // リフレッシュトークンがある場合、自動更新を設定
+  // トークンの自動更新を設定
   oauth2Client.on('tokens', async (tokens) => {
-    if (tokens.refresh_token) {
+    console.log('🔄 Refreshing Google tokens...');
+    await prisma.account.update({
+      where: { id: account.id },
+      data: {
+        access_token: tokens.access_token ?? account.access_token,
+        refresh_token: tokens.refresh_token ?? account.refresh_token,
+        expires_at: tokens.expiry_date
+          ? Math.floor(tokens.expiry_date / 1000)
+          : account.expires_at,
+      },
+    });
+  });
+
+  // トークンが期限切れの場合は事前にリフレッシュ
+  try {
+    const tokenInfo = await oauth2Client.getAccessToken();
+    if (tokenInfo.token && tokenInfo.token !== account.access_token) {
       await prisma.account.update({
         where: { id: account.id },
         data: {
-          access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
-          expires_at: tokens.expiry_date
-            ? Math.floor(tokens.expiry_date / 1000)
-            : null,
+          access_token: tokenInfo.token,
         },
       });
     }
-  });
+  } catch (error) {
+    console.error('❌ トークンリフレッシュエラー:', error);
+    throw new Error('Google認証トークンの更新に失敗しました。再度ログインしてください。');
+  }
 
   return google.tasks({ version: 'v1', auth: oauth2Client });
 }

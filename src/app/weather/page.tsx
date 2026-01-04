@@ -52,7 +52,11 @@ export default function WeatherPage() {
         const adaptedEvents = adaptGoogleCalendarEvents(data.events || []);
         setCalendarEvents(adaptedEvents);
       } else {
-        console.error('カレンダーイベントの取得に失敗しました');
+        const errorData = await res.json().catch(() => ({}));
+        console.error('カレンダーイベントの取得に失敗しました:', {
+          status: res.status,
+          error: errorData
+        });
         setCalendarEvents([]);
       }
     } catch (error) {
