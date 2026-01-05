@@ -116,9 +116,13 @@ describe('Home Page', () => {
       { timeout: 3000 }
     );
 
-    // サイドバーの「ホーム」メニューが表示されているか確認
-    const homeMenu = await screen.findByText('ホーム', {}, { timeout: 3000 });
-    expect(homeMenu).toBeInTheDocument();
+    // サイドバーのタイトルが表示されているか確認
+    const sidebarTitle = await screen.findByText(
+      'Productivity Hub',
+      {},
+      { timeout: 3000 }
+    );
+    expect(sidebarTitle).toBeInTheDocument();
   });
 
   it('今月の支出カードが表示される', async () => {
