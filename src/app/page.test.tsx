@@ -77,6 +77,7 @@ describe('Home Page', () => {
             expenseData: {
               categories: [],
               total: 50000,
+              period: '2025年1月',
             },
           }),
       })
@@ -117,11 +118,7 @@ describe('Home Page', () => {
     );
 
     // サイドバーのタイトルが表示されているか確認
-    const sidebarTitle = await screen.findByText(
-      'Productivity Hub',
-      {},
-      { timeout: 3000 }
-    );
+    const sidebarTitle = screen.getByText('Productivity Hub');
     expect(sidebarTitle).toBeInTheDocument();
   });
 
