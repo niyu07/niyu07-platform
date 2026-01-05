@@ -89,7 +89,16 @@ export function useGoogleCalendar() {
 
     try {
       const response = await fetch('/api/calendar/list');
-      if (!response.ok) throw new Error('Failed to fetch calendars');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage =
+          errorData.error || `Failed to fetch calendars (${response.status})`;
+        console.error('API Error:', {
+          status: response.status,
+          error: errorData,
+        });
+        throw new Error(errorMessage);
+      }
 
       const data = await response.json();
       const calendarList: GoogleCalendar[] = data.calendars || [];
@@ -102,6 +111,7 @@ export function useGoogleCalendar() {
         setSelectedCalendarIds([primaryCalendar.id]);
       }
     } catch (err) {
+      setError(err as Error);
       console.error('カレンダーリスト取得エラー:', err);
     }
   }, [status, selectedCalendarIds.length]);
@@ -128,7 +138,16 @@ export function useGoogleCalendar() {
         }
 
         const response = await fetch(`/api/calendar/events?${params}`);
-        if (!response.ok) throw new Error('Failed to fetch events');
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage =
+            errorData.error || `Failed to fetch events (${response.status})`;
+          console.error('API Error:', {
+            status: response.status,
+            error: errorData,
+          });
+          throw new Error(errorMessage);
+        }
 
         const data = await response.json();
         const googleEvents: GoogleCalendarEvent[] = data.events || [];

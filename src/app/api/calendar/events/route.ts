@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import {
   getEvents,
@@ -11,11 +11,12 @@ import {
 } from '@/lib/google-calendar';
 
 // カレンダーイベントを取得
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
+      console.error('Unauthorized access - no session');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -23,6 +24,13 @@ export async function GET(request: NextRequest) {
     const timeMin = searchParams.get('timeMin');
     const timeMax = searchParams.get('timeMax');
     const calendarIds = searchParams.get('calendarIds');
+
+    console.log('Calendar Events API GET:', {
+      userId: session.user.id,
+      timeMin,
+      timeMax,
+      calendarIds,
+    });
 
     let events;
     if (timeMin && timeMax) {
@@ -45,18 +53,26 @@ export async function GET(request: NextRequest) {
       events = await getTodayEvents(session.user.id);
     }
 
+    console.log(`✅ Fetched ${events.length} calendar events`);
     return NextResponse.json({ events });
   } catch (error) {
-    console.error('Error fetching calendar events:', error);
+    console.error('❌ Error fetching calendar events:', error);
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : 'Failed to fetch calendar events';
     return NextResponse.json(
-      { error: 'Failed to fetch calendar events' },
+      {
+        error: errorMessage,
+        details: error instanceof Error ? error.stack : undefined,
+      },
       { status: 500 }
     );
   }
 }
 
 // カレンダーイベントを作成
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -78,7 +94,7 @@ export async function POST(request: NextRequest) {
 }
 
 // カレンダーイベントを更新
-export async function PUT(request: NextRequest) {
+export async function PUT(request: Request) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -109,7 +125,7 @@ export async function PUT(request: NextRequest) {
 }
 
 // カレンダーイベントを削除
-export async function DELETE(request: NextRequest) {
+export async function DELETE(request: Request) {
   try {
     const session = await getServerSession(authOptions);
 
