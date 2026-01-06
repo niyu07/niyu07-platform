@@ -75,7 +75,26 @@ describe('Home Page', () => {
             weather: null,
             pomodoroData: [],
             expenseData: {
-              categories: [],
+              categories: [
+                {
+                  name: '食費',
+                  amount: 20000,
+                  percentage: 40,
+                  color: '#FF6B6B',
+                },
+                {
+                  name: '交通費',
+                  amount: 15000,
+                  percentage: 30,
+                  color: '#4ECDC4',
+                },
+                {
+                  name: 'その他',
+                  amount: 15000,
+                  percentage: 30,
+                  color: '#95E1D3',
+                },
+              ],
               total: 50000,
               period: '2025年1月',
             },
