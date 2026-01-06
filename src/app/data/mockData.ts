@@ -21,6 +21,8 @@ import {
   MaterialRecommendation,
   WorkLocation,
   AttendanceRecord,
+  StudyLogSettings,
+  HabitCompletion,
 } from '../types';
 
 // モックユーザーデータ
@@ -997,6 +999,90 @@ export const mockRecommendations: MaterialRecommendation[] = [
     type: '書籍',
     category: 'English',
     reason: 'TOEIC対策に最適',
+  },
+];
+
+// 学習ログ設定のモックデータ
+export const mockStudyLogSettings: StudyLogSettings = {
+  dailyGoalHours: 5.0,
+  weeklyGoalHours: 30,
+  monthlyGoalHours: 120,
+  customCategories: [
+    {
+      name: 'Business',
+      color: '#F44336',
+    },
+  ],
+  habits: [
+    {
+      id: 'habit-1',
+      title: '朝の学習',
+      description: '起きたら30分間、プログラミングの学習をする',
+      category: 'Programming',
+      targetDays: [1, 2, 3, 4, 5], // 月〜金
+      isActive: true,
+      createdAt: '2025-12-01T00:00:00',
+      updatedAt: '2025-12-01T00:00:00',
+    },
+    {
+      id: 'habit-2',
+      title: '英語の復習',
+      description: '毎日10分間、英単語を復習する',
+      category: 'English',
+      targetDays: [0, 1, 2, 3, 4, 5, 6], // 毎日
+      isActive: true,
+      createdAt: '2025-12-01T00:00:00',
+      updatedAt: '2025-12-01T00:00:00',
+    },
+    {
+      id: 'habit-3',
+      title: 'デザインの練習',
+      description: '週末に1時間、デザインツールの練習をする',
+      category: 'Design',
+      targetDays: [0, 6], // 土日
+      isActive: true,
+      createdAt: '2025-12-01T00:00:00',
+      updatedAt: '2025-12-01T00:00:00',
+    },
+  ],
+  updatedAt: '2025-12-26T00:00:00',
+};
+
+// 習慣完了記録のモックデータ（今日は2025-12-26、木曜日）
+export const mockHabitCompletions: HabitCompletion[] = [
+  // 今日（12/26、木曜日）の記録
+  {
+    id: 'hc-1',
+    habitId: 'habit-1', // 朝の学習
+    date: '2025-12-26',
+    completed: true,
+    createdAt: '2025-12-26T08:00:00',
+    updatedAt: '2025-12-26T08:00:00',
+  },
+  {
+    id: 'hc-2',
+    habitId: 'habit-2', // 英語の復習
+    date: '2025-12-26',
+    completed: true,
+    createdAt: '2025-12-26T09:00:00',
+    updatedAt: '2025-12-26T09:00:00',
+  },
+  // 昨日（12/25、水曜日）の記録
+  {
+    id: 'hc-3',
+    habitId: 'habit-1',
+    date: '2025-12-25',
+    completed: true,
+    createdAt: '2025-12-25T08:00:00',
+    updatedAt: '2025-12-25T08:00:00',
+  },
+  {
+    id: 'hc-4',
+    habitId: 'habit-2',
+    date: '2025-12-25',
+    completed: true,
+    createdAt: '2025-12-25T09:00:00',
+    updatedAt: '2025-12-25T09:00:00',
   },
 ];
 

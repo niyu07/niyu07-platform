@@ -599,6 +599,53 @@ export interface StudyLogDashboard {
   encouragementMessage?: string; // 応援メッセージ
 }
 
+// 習慣（ハビット）
+export interface Habit {
+  id: string;
+  title: string; // 習慣の名前（例: "朝の学習"）
+  description?: string; // 詳細説明
+  category?: StudyCategory; // 学習カテゴリ（任意）
+  targetDays: number[]; // 対象曜日（0:日-6:土）
+  isActive: boolean; // 有効/無効
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 習慣の実行記録
+export interface HabitCompletion {
+  id: string;
+  habitId: string;
+  date: string; // YYYY-MM-DD
+  completed: boolean;
+  memo?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 学習ログ設定
+export interface StudyLogSettings {
+  // 1日の目標学習時間（時間）
+  dailyGoalHours: number;
+
+  // 週間目標学習時間（時間）
+  weeklyGoalHours?: number;
+
+  // 月間目標学習時間（時間）
+  monthlyGoalHours?: number;
+
+  // カスタムカテゴリ（デフォルトのStudyCategoryに加えて使用）
+  customCategories: {
+    name: string;
+    color: string;
+  }[];
+
+  // 習慣リスト
+  habits: Habit[];
+
+  // 設定の更新日時
+  updatedAt: string;
+}
+
 // 勤怠管理の型定義
 
 // 勤務先の種類
