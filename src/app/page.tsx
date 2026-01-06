@@ -11,6 +11,7 @@ import WeatherCard from './components/WeatherCard';
 import PomodoroChart from './components/PomodoroChart';
 import TaskList from './components/TaskList';
 import ExpenseChart from './components/ExpenseChart';
+import HabitChecklist from './components/HabitChecklist';
 import {
   Event,
   Weather,
@@ -18,6 +19,8 @@ import {
   ExpenseData,
   SummaryData,
   Task,
+  Habit,
+  HabitCompletion,
 } from './types';
 
 interface DashboardData {
@@ -32,6 +35,10 @@ interface DashboardData {
   weather: Weather | null;
   pomodoroData: PomodoroData[];
   expenseData: ExpenseData;
+  habits?: {
+    habits: Habit[];
+    completions: HabitCompletion[];
+  };
 }
 
 export default function Home() {
@@ -142,6 +149,14 @@ export default function Home() {
               {/* 天気カード */}
               {dashboardData.weather && (
                 <WeatherCard weather={dashboardData.weather} />
+              )}
+
+              {/* 習慣チェックリスト */}
+              {dashboardData.habits && (
+                <HabitChecklist
+                  habits={dashboardData.habits.habits}
+                  completions={dashboardData.habits.completions}
+                />
               )}
 
               {/* 今日のタスク */}

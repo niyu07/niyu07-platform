@@ -37,6 +37,11 @@ model User {
   accountingSettings   AccountingSettings?
   monthlyFinancialData MonthlyFinancialData[]
 
+  // 学習ログ
+  studyLogSettings StudyLogSettings?
+  habits           Habit[]
+  habitCompletions HabitCompletion[]
+
   @@map("users")
 }
 
@@ -341,4 +346,67 @@ model MonthlyFinancialData {
   @@unique([userId, year, month])
   @@index([userId, year])
   @@map("monthly_financial_data")
+}
+
+// ========================================
+// 学習ログ
+// ========================================
+
+// 学習ログ設定
+model StudyLogSettings {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  dailyGoalHours    Float    @default(5.0) // 1日の目標学習時間（時間）
+  weeklyGoalHours   Float? // 週間目標学習時間（時間）
+  monthlyGoalHours  Float? // 月間目標学習時間（時間）
+  customCategories  Json     @default("[]") // カスタムカテゴリ（JSONで保存）
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  habits Habit[]
+
+  @@map("study_log_settings")
+}
+
+// 習慣（ハビット）
+model Habit {
+  id                   String   @id @default(cuid())
+  userId               String
+  studyLogSettingsId   String
+  title                String // 習慣の名前（例: "朝の学習"）
+  description          String? @db.Text // 詳細説明
+  category             String? // 学習カテゴリ（任意）
+  targetDays           Int[] // 対象曜日（0:日-6:土）
+  isActive             Boolean  @default(true) // 有効/無効
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  studyLogSettings StudyLogSettings @relation(fields: [studyLogSettingsId], references: [id], onDelete: Cascade)
+  completions      HabitCompletion[]
+
+  @@index([userId])
+  @@index([studyLogSettingsId])
+  @@map("habits")
+}
+
+// 習慣の実行記録
+model HabitCompletion {
+  id        String   @id @default(cuid())
+  userId    String
+  habitId   String
+  date      String // YYYY-MM-DD
+  completed Boolean  @default(false)
+  memo      String? @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, habitId, date])
+  @@index([userId, date])
+  @@index([habitId])
+  @@map("habit_completions")
 }

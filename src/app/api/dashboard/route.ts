@@ -169,7 +169,8 @@ export async function GET() {
     try {
       weather = await getCurrentWeather('Tokyo,JP');
     } catch (error) {
-      console.error('Error fetching weather:', error);
+      // APIキーが未設定または無効な場合は、天気情報なしで続行
+      console.warn('Weather API is unavailable:', error instanceof Error ? error.message : 'Unknown error');
     }
 
     // 5. ポモドーロデータ（今週）
@@ -400,6 +401,45 @@ export async function GET() {
       needsAttention,
     };
 
+    // 8. 習慣データ
+    // 学習ログ設定から習慣を取得
+    const studyLogSettings = await prisma.studyLogSettings.findUnique({
+      where: { userId },
+      include: {
+        habits: true,
+      },
+    });
+
+    const todayStr = today.toISOString().split('T')[0];
+    const todayDayOfWeek = today.getDay(); // 0: 日曜日 - 6: 土曜日
+
+    // 今日のアクティブな習慣のみをフィルタリング
+    const todayHabits =
+      studyLogSettings?.habits.filter((habit) => {
+        return (
+          habit.isActive &&
+          habit.targetDays &&
+          Array.isArray(habit.targetDays) &&
+          habit.targetDays.includes(todayDayOfWeek)
+        );
+      }) || [];
+
+    // 今日の習慣完了記録を取得
+    const habitCompletions = await prisma.habitCompletion.findMany({
+      where: {
+        userId,
+        date: todayStr,
+        habitId: {
+          in: todayHabits.map((h) => h.id),
+        },
+      },
+    });
+
+    const habitsData = {
+      habits: todayHabits,
+      completions: habitCompletions,
+    };
+
     // ダッシュボードデータをまとめて返す
     const dashboard = {
       user,
@@ -409,6 +449,7 @@ export async function GET() {
       weather,
       pomodoroData: dailyPomodoro,
       expenseData,
+      habits: habitsData,
     };
 
     return NextResponse.json(dashboard);

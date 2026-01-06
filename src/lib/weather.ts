@@ -70,7 +70,9 @@ export async function getCurrentWeather(
     const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error(`OpenWeatherMap API Error: ${response.status}`);
+      const errorData = await response.json().catch(() => ({}));
+      const message = errorData.message || `HTTP ${response.status}`;
+      throw new Error(`OpenWeatherMap API Error: ${message}`);
     }
 
     const data = await response.json();
@@ -124,7 +126,9 @@ export async function getWeatherForecast(
     const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error(`OpenWeatherMap API Error: ${response.status}`);
+      const errorData = await response.json().catch(() => ({}));
+      const message = errorData.message || `HTTP ${response.status}`;
+      throw new Error(`OpenWeatherMap API Error: ${message}`);
     }
 
     const data = await response.json();
