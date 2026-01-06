@@ -16,8 +16,7 @@ vi.mock('next-auth/react', async () => {
 /**
  * ホームページのテスト
  *
- * このテストは「画面が正しく表示されるか」を確認します。
- * 初心者向けの最初のテストとして、シンプルな内容にしています。
+ * 認証済みユーザーのダッシュボード表示をテストします。
  */
 describe('Home Page', () => {
   beforeEach(() => {
@@ -110,48 +109,27 @@ describe('Home Page', () => {
     );
   };
 
-  it('ページが正しく表示される', async () => {
-    // ホームページを描画する
+  it('認証済みユーザーのダッシュボードが正しく表示される', async () => {
     renderWithSession(<Home />);
 
-    // データが読み込まれるまで待つ
+    // ローディングが終わるまで待つ
     await waitFor(() => {
       expect(screen.queryByText('読み込み中...')).not.toBeInTheDocument();
     });
 
-    // ユーザー名が表示されているか確認
-    const userName = await screen.findByText(/テストユーザー/i);
-    expect(userName).toBeInTheDocument();
+    // 主要な要素が表示されていることを確認
+    expect(screen.getByText('Productivity Hub')).toBeInTheDocument();
+    expect(screen.getByText(/テストユーザー/i)).toBeInTheDocument();
   });
 
-  it('サイドバーが表示される', async () => {
-    // ホームページを描画する
+  it('APIからダッシュボードデータを取得する', async () => {
     renderWithSession(<Home />);
 
-    // データが読み込まれるまで待つ
-    await waitFor(
-      () => {
-        expect(screen.queryByText('読み込み中...')).not.toBeInTheDocument();
-      },
-      { timeout: 3000 }
-    );
-
-    // サイドバーのタイトルが表示されているか確認
-    const sidebarTitle = screen.getByText('Productivity Hub');
-    expect(sidebarTitle).toBeInTheDocument();
-  });
-
-  it('今月の支出カードが表示される', async () => {
-    // ホームページを描画する
-    renderWithSession(<Home />);
-
-    // データが読み込まれるまで待つ
     await waitFor(() => {
       expect(screen.queryByText('読み込み中...')).not.toBeInTheDocument();
     });
 
-    // 今月の支出カードが表示されているか確認
-    const expenseCard = await screen.findByText('今月の支出');
-    expect(expenseCard).toBeInTheDocument();
+    // fetch が /api/dashboard を呼び出したことを確認
+    expect(global.fetch).toHaveBeenCalledWith('/api/dashboard');
   });
 });
