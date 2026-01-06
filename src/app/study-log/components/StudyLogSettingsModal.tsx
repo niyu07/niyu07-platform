@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { StudyLogSettings, Habit, StudyCategory } from '@/app/types';
+import { StudyLogSettings, Habit } from '@/app/types';
 
 interface StudyLogSettingsModalProps {
   isOpen: boolean;
@@ -16,9 +16,9 @@ export default function StudyLogSettingsModal({
   settings,
   onSave,
 }: StudyLogSettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<
-    'goals' | 'categories' | 'habits'
-  >('goals');
+  const [activeTab, setActiveTab] = useState<'goals' | 'categories' | 'habits'>(
+    'goals'
+  );
   const [localSettings, setLocalSettings] =
     useState<StudyLogSettings>(settings);
 
@@ -177,9 +177,7 @@ export default function StudyLogSettingsModal({
                   }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  推奨: 2〜5時間程度
-                </p>
+                <p className="text-xs text-gray-500 mt-1">推奨: 2〜5時間程度</p>
               </div>
 
               <div>

@@ -38,13 +38,16 @@ export default function HabitChecklist({
         )
       );
     } else {
+      // イベントハンドラー内でDate.now()を呼ぶため、純粋性の問題を回避
+      const timestamp = Date.now();
+      const now = new Date().toISOString();
       const newCompletion: HabitCompletion = {
-        id: `hc-${Date.now()}`,
+        id: `hc-${timestamp}`,
         habitId,
         date: todayStr,
         completed: newCompletedState,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: now,
+        updatedAt: now,
       };
       setCompletions([...completions, newCompletion]);
     }

@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { Habit, HabitCompletion } from '@/app/types';
 
 interface HabitTrackerProps {

@@ -170,7 +170,10 @@ export async function GET() {
       weather = await getCurrentWeather('Tokyo,JP');
     } catch (error) {
       // APIキーが未設定または無効な場合は、天気情報なしで続行
-      console.warn('Weather API is unavailable:', error instanceof Error ? error.message : 'Unknown error');
+      console.warn(
+        'Weather API is unavailable:',
+        error instanceof Error ? error.message : 'Unknown error'
+      );
     }
 
     // 5. ポモドーロデータ（今週）

@@ -22,7 +22,6 @@ import {
   WorkLocation,
   AttendanceRecord,
   StudyLogSettings,
-  Habit,
   HabitCompletion,
 } from '../types';
 
