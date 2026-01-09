@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+  <head>
+    <style>
+      body {
+        font-family: 'Courier New', monospace;
+        margin: 0;
+        padding: 20px;
+        background: white;
+      }
+      .receipt {
+        width: 300px;
+        border: 2px solid black;
+        padding: 20px;
+        background: white;
+      }
+      .center {
+        text-align: center;
+      }
+      .line {
+        border-top: 1px dashed black;
+        margin: 10px 0;
+      }
+      .item {
+        display: flex;
+        justify-content: space-between;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="receipt">
+      <h2 class="center">RECEIPT</h2>
+      <p class="center">ABC Store</p>
+      <p class="center">123 Main Street</p>
+      <div class="line"></div>
+      <div class="item"><span>Coffee</span><span>$3.50</span></div>
+      <div class="item"><span>Sandwich</span><span>$7.99</span></div>
+      <div class="item"><span>Cookie</span><span>$2.00</span></div>
+      <div class="line"></div>
+      <div class="item"><strong>Total</strong><strong>$13.49</strong></div>
+      <div class="line"></div>
+      <p class="center">Thank you!</p>
+      <p class="center">2024-01-09 14:30</p>
+    </div>
+  </body>
+</html>
