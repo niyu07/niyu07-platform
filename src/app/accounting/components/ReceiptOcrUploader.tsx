@@ -2,6 +2,24 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import Image from 'next/image';
+
+/**
+ * レシートOCRアップローダーコンポーネント
+ *
+ * 機能:
+ * - ドラッグ&ドロップでのファイルアップロード
+ * - モバイルカメラ連携 (capture="environment")
+ * - クリップボード貼り付け (Ctrl+V / Cmd+V)
+ * - アップロードプレビュー機能
+ * - レスポンシブデザイン対応
+ *
+ * TODO: モバイル版の実機テストを公開後に実施
+ * - カメラ起動の動作確認
+ * - ドラッグ&ドロップのタッチ操作確認
+ * - クリップボード貼り付けの動作確認
+ * - プレビュー表示の確認
+ */
 
 interface OcrResult {
   storeName: string | null;
@@ -35,7 +53,10 @@ export default function ReceiptOcrUploader({
   const [ocrResult, setOcrResult] = useState<OcrResult | null>(null);
   const [error, setError] = useState<string>('');
   const [usage, setUsage] = useState<OcrUsage | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
 
   // OCR使用状況を取得
   const fetchUsage = async () => {
@@ -57,20 +78,64 @@ export default function ReceiptOcrUploader({
     fetchUsage();
   }, []);
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // クリップボード貼り付けイベントリスナーを設定
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
 
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) {
+            processFile(file);
+          }
+          break;
+        }
+      }
+    };
+
+    // dropZoneがフォーカス可能な場合のみペーストイベントをリッスン
+    const dropZone = dropZoneRef.current;
+    if (dropZone) {
+      dropZone.addEventListener('paste', handlePaste as EventListener);
+      return () => {
+        dropZone.removeEventListener('paste', handlePaste as EventListener);
+      };
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ファイル検証とプレビュー生成
+  const validateAndPreviewFile = (file: File): boolean => {
     // ファイルタイプチェック
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
       setError('画像ファイル（JPEG, PNG, WebP）のみアップロード可能です');
-      return;
+      return false;
     }
 
     // ファイルサイズチェック（5MB）
     if (file.size > 5 * 1024 * 1024) {
       setError('ファイルサイズは5MB以下にしてください');
+      return false;
+    }
+
+    // プレビュー画像を生成
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPreviewUrl(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    return true;
+  };
+
+  // ファイル処理（アップロードとOCR）
+  const processFile = async (file: File) => {
+    if (!validateAndPreviewFile(file)) {
       return;
     }
 
@@ -162,12 +227,69 @@ export default function ReceiptOcrUploader({
     }
   };
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await processFile(file);
+  };
+
+  // ドラッグ&ドロップハンドラー
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // 子要素から出た時に誤ってfalseにならないようにチェック
+    if (e.currentTarget === e.target) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      await processFile(files[0]);
+    }
+  };
+
   const handleButtonClick = () => {
     fileInputRef.current?.click();
   };
 
+  const handleClearPreview = () => {
+    setPreviewUrl(null);
+    setOcrResult(null);
+    setError('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   return (
-    <div className="space-y-4">
+    <div
+      ref={dropZoneRef}
+      tabIndex={0}
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      className="space-y-4 outline-none"
+      aria-label="レシートアップロードエリア（クリップボードから貼り付け可能）"
+    >
       {/* OCR使用状況 */}
       {usage && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -196,44 +318,131 @@ export default function ReceiptOcrUploader({
         </div>
       )}
 
-      {/* アップロードボタン */}
-      <div>
-        <button
-          type="button"
-          onClick={handleButtonClick}
-          disabled={
-            isUploading || isProcessing || (usage ? !usage.canUseOcr : false)
-          }
-          className="w-full px-6 py-4 bg-linear-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {isUploading ? (
-            <>
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              <span>アップロード中...</span>
-            </>
-          ) : isProcessing ? (
-            <>
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              <span>OCR処理中...</span>
-            </>
-          ) : (
-            <>
-              <span className="text-2xl">📸</span>
-              <span>レシートを撮影してOCR処理</span>
-            </>
-          )}
-        </button>
+      {/* プレビュー表示 */}
+      {previewUrl && (
+        <div className="relative bg-gray-50 border-2 border-gray-200 rounded-lg p-4">
+          <button
+            type="button"
+            onClick={handleClearPreview}
+            className="absolute top-2 right-2 z-10 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+            aria-label="プレビューをクリア"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+          <div className="flex justify-center">
+            <div className="relative w-full max-w-md">
+              <Image
+                src={previewUrl}
+                alt="レシートプレビュー"
+                width={400}
+                height={600}
+                className="rounded-lg shadow-md object-contain w-full h-auto"
+                unoptimized
+              />
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 text-center mt-2">
+            アップロード済み
+          </p>
+        </div>
+      )}
+
+      {/* ドラッグ&ドロップエリア / アップロードボタン */}
+      <div
+        onClick={handleButtonClick}
+        className={`
+          relative border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer
+          ${isDragging ? 'border-blue-500 bg-blue-50 scale-105' : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'}
+          ${isUploading || isProcessing || (usage && !usage.canUseOcr) ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
+        `}
+      >
+        {isUploading ? (
+          <div className="space-y-3">
+            <div className="w-12 h-12 mx-auto border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-blue-600 font-medium">アップロード中...</p>
+          </div>
+        ) : isProcessing ? (
+          <div className="space-y-3">
+            <div className="w-12 h-12 mx-auto border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-purple-600 font-medium">OCR処理中...</p>
+            <p className="text-sm text-gray-500">レシートを解析しています</p>
+          </div>
+        ) : (
+          <>
+            <div className="text-6xl mb-4">{isDragging ? '📥' : '📸'}</div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              {isDragging ? 'ここにドロップ' : 'レシートをアップロード'}
+            </h3>
+            <div className="space-y-2 text-sm text-gray-600">
+              <p className="font-medium">以下の方法でアップロードできます：</p>
+              <ul className="space-y-1">
+                <li className="flex items-center justify-center gap-2">
+                  <span>🖱️</span>
+                  <span>クリックしてファイル選択</span>
+                </li>
+                <li className="flex items-center justify-center gap-2 md:hidden">
+                  <span>📷</span>
+                  <span>カメラで撮影</span>
+                </li>
+                <li className="flex items-center justify-center gap-2">
+                  <span>🎯</span>
+                  <span>ドラッグ&ドロップ</span>
+                </li>
+                <li className="flex items-center justify-center gap-2">
+                  <span>📋</span>
+                  <span>Ctrl+V または Cmd+V で貼り付け</span>
+                </li>
+              </ul>
+            </div>
+            <p className="text-xs text-gray-500 mt-4">
+              対応形式: JPEG, PNG, WebP（最大5MB）
+            </p>
+          </>
+        )}
+
         <input
           ref={fileInputRef}
           type="file"
           accept="image/jpeg,image/jpg,image/png,image/webp"
+          capture="environment"
           onChange={handleFileSelect}
           className="hidden"
+          disabled={
+            isUploading || isProcessing || (usage ? !usage.canUseOcr : false)
+          }
         />
-        <p className="text-xs text-gray-500 mt-2 text-center">
-          画像ファイル（JPEG, PNG, WebP）最大5MB
-        </p>
       </div>
+
+      {/* ヒント */}
+      {!previewUrl && !isUploading && !isProcessing && (
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">💡</span>
+            <div className="flex-1 text-sm text-gray-700">
+              <p className="font-medium mb-1">ヒント:</p>
+              <ul className="space-y-1 text-xs">
+                <li>• モバイルの場合、タップするとカメラが起動します</li>
+                <li>
+                  • スクリーンショットをコピーして Ctrl+V で貼り付けできます
+                </li>
+                <li>• レシート全体がはっきり写っていると精度が向上します</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* エラー表示 */}
       {error && (
@@ -253,7 +462,7 @@ export default function ReceiptOcrUploader({
             </span>
           </h3>
 
-          <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             {ocrResult.storeName && (
               <div>
                 <span className="text-gray-600">店舗名:</span>
