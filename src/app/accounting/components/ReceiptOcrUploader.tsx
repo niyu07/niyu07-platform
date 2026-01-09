@@ -167,10 +167,10 @@ export default function ReceiptOcrUploader({
       if (ocrUsage) {
         setUsage(ocrUsage);
 
-        // OCR使用可能回数をチェック
+        // Google API使用可能回数をチェック
         if (!ocrUsage.canUseOcr) {
           setError(
-            `OCR処理の月間上限（${ocrUsage.limit}回）に達しました。来月まで利用できません。`
+            `Google API使用量が月間上限（${ocrUsage.limit}回）に達しました。来月まで利用できません。`
           );
           setIsUploading(false);
           return;
@@ -290,11 +290,13 @@ export default function ReceiptOcrUploader({
       className="space-y-4 outline-none"
       aria-label="レシートアップロードエリア（クリップボードから貼り付け可能）"
     >
-      {/* OCR使用状況 */}
+      {/* Google API使用状況 */}
       {usage && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-medium text-blue-900">OCR使用状況（今月）</h3>
+            <h3 className="font-medium text-blue-900">
+              Google API使用状況（今月）
+            </h3>
             <span className="text-sm text-blue-700">
               {usage.count} / {usage.limit} 回
             </span>
@@ -314,6 +316,9 @@ export default function ReceiptOcrUploader({
           <p className="text-xs text-blue-600 mt-2">
             残り {usage.remaining} 回利用可能
             {usage.percentage >= 90 && ' ⚠️ 上限に近づいています'}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            ※ OCR、カレンダー、タスクなどすべてのGoogle APIの合計
           </p>
         </div>
       )}
