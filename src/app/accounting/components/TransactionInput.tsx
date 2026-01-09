@@ -4,6 +4,7 @@ import { Transaction, TransactionType } from '../../types';
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { validateFile, MAX_FILE_SIZE, ALLOWED_FILE_TYPES } from '@/lib/upload';
+import ReceiptOcrUploader from './ReceiptOcrUploader';
 
 interface TransactionInputProps {
   initialType?: TransactionType;
@@ -515,6 +516,48 @@ export default function TransactionInput({
     setNewCategoryName('');
   };
 
+  // OCR結果をフォームに反映
+  const handleOcrSuccess = (ocrData: {
+    storeName: string | null;
+    transactionDate: string | null;
+    totalAmount: number | null;
+    taxAmount: number | null;
+    paymentMethod: string | null;
+    items: Array<{ name: string; price?: number }>;
+    rawText: string;
+    confidence: number;
+  }) => {
+    console.log('handleOcrSuccess called with:', ocrData);
+
+    // storeName → client
+    if (ocrData.storeName) {
+      console.log('Setting client to:', ocrData.storeName);
+      setClient(ocrData.storeName);
+    }
+
+    // totalAmount → amount
+    if (ocrData.totalAmount !== null) {
+      console.log('Setting amount to:', ocrData.totalAmount);
+      setAmount(ocrData.totalAmount.toString());
+    }
+
+    // transactionDate → date (ISO形式YYYY-MM-DDに変換)
+    if (ocrData.transactionDate) {
+      const date = new Date(ocrData.transactionDate);
+      const formattedDate = date.toISOString().split('T')[0];
+      console.log('Setting date to:', formattedDate);
+      setDate(formattedDate);
+    }
+
+    // 取引タイプをデフォルトで「経費」に設定（レシートは通常経費）
+    console.log('Setting transaction type to: 経費');
+    setTransactionType('経費');
+
+    // detailは空のままにして、ユーザーが手動で入力できるようにする
+    // カテゴリも空のままにして、ユーザーが選択できるようにする
+    console.log('OCR data mapping completed');
+  };
+
   const recentClients = [
     '株式会社A',
     '株式会社B',
@@ -762,6 +805,14 @@ export default function TransactionInput({
               rows={4}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
+          </div>
+
+          {/* OCRレシートアップロード */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              レシートOCR
+            </label>
+            <ReceiptOcrUploader onOcrSuccess={handleOcrSuccess} />
           </div>
 
           {/* 領収書・請求書 */}

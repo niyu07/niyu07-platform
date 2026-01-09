@@ -130,7 +130,15 @@ export default function ReceiptOcrUploader({
       }
 
       const ocrData = await ocrResponse.json();
-      console.log('OCR result:', ocrData.data);
+      console.log('OCR result full response:', ocrData);
+      console.log('OCR result data:', ocrData.data);
+      console.log('OCR result data details:', {
+        storeName: ocrData.data.storeName,
+        transactionDate: ocrData.data.transactionDate,
+        totalAmount: ocrData.data.totalAmount,
+        taxAmount: ocrData.data.taxAmount,
+        confidence: ocrData.data.confidence,
+      });
 
       setOcrResult(ocrData.data);
       setIsProcessing(false);
@@ -139,8 +147,12 @@ export default function ReceiptOcrUploader({
       await fetchUsage();
 
       // 親コンポーネントにOCR結果を通知
+      console.log('Calling onOcrSuccess with data:', ocrData.data);
       if (onOcrSuccess) {
         onOcrSuccess(ocrData.data);
+        console.log('onOcrSuccess callback executed');
+      } else {
+        console.warn('onOcrSuccess callback is not defined');
       }
     } catch (err) {
       console.error('OCR error:', err);

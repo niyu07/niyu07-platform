@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import vision from '@google-cloud/vision';
 import { incrementUsage, getUsage } from '@/lib/api-usage';
+import { supabase, RECEIPTS_BUCKET } from '@/lib/supabase';
 
 /**
  * サポートされている画像形式
@@ -159,24 +160,46 @@ export async function POST(request: NextRequest) {
       }
 
       // 画像データを取得
-      let imageContent: Buffer | string;
+      // SupabaseのURLからファイルパスを抽出
+      // 例: https://xxx.supabase.co/storage/v1/object/public/receipts/userId/receiptId/filename.jpg
+      // から userId/receiptId/filename.jpg を抽出
+      console.log('[POST /api/receipts/ocr] Extracting file path from URL...');
+      const urlParts = imageUrl.split('/');
+      const bucketsIndex = urlParts.findIndex(
+        (part: string) => part === RECEIPTS_BUCKET
+      );
 
-      if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-        // URLの場合は画像をダウンロード
-        console.log('[POST /api/receipts/ocr] Downloading image from URL...');
-        const response = await fetch(imageUrl);
-        if (!response.ok) {
-          throw new Error(`Failed to download image: HTTP ${response.status}`);
-        }
-        const arrayBuffer = await response.arrayBuffer();
-        imageContent = Buffer.from(arrayBuffer);
-        console.log(
-          `[POST /api/receipts/ocr] Downloaded image: ${(imageContent.length / 1024).toFixed(2)} KB`
-        );
-      } else {
-        // ローカルファイルパスの場合（通常は使用されないが、念のため）
-        imageContent = imageUrl;
+      if (bucketsIndex === -1) {
+        throw new Error('Invalid image URL: bucket name not found');
       }
+
+      const filePath = urlParts.slice(bucketsIndex + 1).join('/');
+      console.log('[POST /api/receipts/ocr] File path:', filePath);
+
+      // Supabase Storageから画像をダウンロード
+      console.log(
+        '[POST /api/receipts/ocr] Downloading image from Supabase...'
+      );
+      const { data: imageData, error: downloadError } = await supabase.storage
+        .from(RECEIPTS_BUCKET)
+        .download(filePath);
+
+      if (downloadError || !imageData) {
+        console.error(
+          '[POST /api/receipts/ocr] Download error:',
+          downloadError
+        );
+        throw new Error(
+          `Failed to download image from Supabase: ${downloadError?.message || 'Unknown error'}`
+        );
+      }
+
+      // BlobをBufferに変換
+      const arrayBuffer = await imageData.arrayBuffer();
+      const imageContent = Buffer.from(arrayBuffer);
+      console.log(
+        `[POST /api/receipts/ocr] Downloaded image: ${(imageContent.length / 1024).toFixed(2)} KB`
+      );
 
       // OCR処理を実行
       console.log('[POST /api/receipts/ocr] Starting OCR processing...');
@@ -241,6 +264,16 @@ export async function POST(request: NextRequest) {
         ocrData.id
       );
 
+      // レスポンスデータをログ出力
+      console.log('[POST /api/receipts/ocr] Response data:', {
+        storeName: ocrData.storeName,
+        transactionDate: ocrData.transactionDate,
+        totalAmount: ocrData.totalAmount,
+        taxAmount: ocrData.taxAmount,
+        paymentMethod: ocrData.paymentMethod,
+        confidence: ocrData.confidence,
+      });
+
       return NextResponse.json(
         {
           success: true,
@@ -288,17 +321,27 @@ function parseReceiptText(rawText: string): OcrResult {
   let paymentMethod: string | null = null;
   const items: OcrItem[] = [];
 
-  // 店舗名の推定（最初の非空行を店舗名とする簡易実装）
-  for (const line of lines) {
-    if (line.length > 0) {
-      storeName = line;
-      break;
-    }
+  // 店舗名の推定（最初の3行から最も長い行を店舗名とする）
+  // ノイズ（記号や数字のみの行）を除外
+  const candidateLines = lines.slice(0, 5).filter((line) => {
+    // 記号や数字だけの行を除外
+    const hasLetters = /[a-zA-Z\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(
+      line
+    );
+    const notOnlyNumbers = !/^\d+$/.test(line);
+    return line.length > 2 && hasLetters && notOnlyNumbers;
+  });
+
+  if (candidateLines.length > 0) {
+    // 最も長い行を店舗名とする
+    storeName = candidateLines.reduce((longest, current) =>
+      current.length > longest.length ? current : longest
+    );
   }
 
   // 日付の抽出（YYYY/MM/DD, YYYY-MM-DD, YYYY年MM月DD日 などの形式に対応）
   const datePatterns = [
-    /(\d{4})[\/\-年](\d{1,2})[\/\-月](\d{1,2})[日]?/,
+    /(\d{4})[年\/\-](\d{1,2})[月\/\-](\d{1,2})[日]?/,
     /(\d{2})[\/\-](\d{1,2})[\/\-](\d{1,2})/,
   ];
 
@@ -310,6 +353,9 @@ function parseReceiptText(rawText: string): OcrResult {
         const month = match[2].padStart(2, '0');
         const day = match[3].padStart(2, '0');
         transactionDate = new Date(`${year}-${month}-${day}`);
+        console.log(
+          `[parseReceiptText] Found date: ${year}-${month}-${day} from line: ${line}`
+        );
         break;
       }
     }
@@ -317,20 +363,94 @@ function parseReceiptText(rawText: string): OcrResult {
   }
 
   // 合計金額の抽出（「合計」「小計」「お会計」などのキーワード後の金額）
-  const totalPatterns = [
-    /(?:合計|小計|お会計|計|total)[^\d]*[¥￥]?(\d{1,3}(?:[,，]\d{3})*)/i,
-    /(?:合計|小計|お会計|計|total)[^\d]*(\d{1,3}(?:[,，]\d{3})*)[円]?/i,
-  ];
+  // まず「合計」キーワードを含む行のインデックスを見つける
+  let totalLineIndex = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (/^合計$/i.test(lines[i].trim())) {
+      totalLineIndex = i;
+      console.log(
+        `[parseReceiptText] Found '合計' keyword at line ${i}: ${lines[i]}`
+      );
+      break;
+    }
+  }
 
-  for (const line of lines) {
-    for (const pattern of totalPatterns) {
-      const match = line.match(pattern);
-      if (match) {
-        totalAmount = parseInt(match[1].replace(/[,，]/g, ''), 10);
-        break;
+  // 「合計」の次の数行で金額を探す
+  if (totalLineIndex !== -1) {
+    for (
+      let i = totalLineIndex;
+      i < Math.min(totalLineIndex + 5, lines.length);
+      i++
+    ) {
+      const line = lines[i];
+      // 金額パターン: ¥421 や 421 など
+      const amountMatch = line.match(/[¥￥]\s*(\d{1,3}(?:[,，]\d{3})*)/);
+      if (amountMatch) {
+        const amount = parseInt(amountMatch[1].replace(/[,，]/g, ''), 10);
+        if (amount >= 10 && amount < 1000000) {
+          totalAmount = amount;
+          console.log(
+            `[parseReceiptText] Found total amount: ${amount} from line ${i}: ${line}`
+          );
+          break;
+        }
       }
     }
-    if (totalAmount !== null) break;
+  }
+
+  // 上記で見つからない場合、従来のパターンマッチングを試す
+  if (totalAmount === null) {
+    const totalPatterns = [
+      // 「合計 ¥421」「合計¥421」のパターン
+      /(?:合計|お会計|total)\s*[¥￥]?\s*(\d{1,3}(?:[,，]\d{3})*)/i,
+      // 「¥421」が合計行にある場合
+      /合計.*?[¥￥]\s*(\d{1,3}(?:[,，]\d{3})*)/i,
+      // 数字だけの場合「合計 421」
+      /合計\s*(\d{1,3}(?:[,，]\d{3})*)/i,
+    ];
+
+    for (const line of lines) {
+      for (const pattern of totalPatterns) {
+        const match = line.match(pattern);
+        if (match) {
+          const amount = parseInt(match[1].replace(/[,，]/g, ''), 10);
+          // 合理的な金額範囲（10円以上、100万円未満）
+          if (amount >= 10 && amount < 1000000) {
+            totalAmount = amount;
+            console.log(
+              `[parseReceiptText] Found total amount (pattern): ${amount} from line: ${line}`
+            );
+            break;
+          }
+        }
+      }
+      if (totalAmount !== null) break;
+    }
+  }
+
+  // 合計が見つからない場合、小計を探す
+  if (totalAmount === null) {
+    const subtotalPatterns = [
+      /(?:小計|subtotal)\s*[¥￥]?\s*(\d{1,3}(?:[,，]\d{3})*)/i,
+      /小計.*?[¥￥]\s*(\d{1,3}(?:[,，]\d{3})*)/i,
+    ];
+
+    for (const line of lines) {
+      for (const pattern of subtotalPatterns) {
+        const match = line.match(pattern);
+        if (match) {
+          const amount = parseInt(match[1].replace(/[,，]/g, ''), 10);
+          if (amount >= 10 && amount < 1000000) {
+            totalAmount = amount;
+            console.log(
+              `[parseReceiptText] Found subtotal amount: ${amount} from line: ${line}`
+            );
+            break;
+          }
+        }
+      }
+      if (totalAmount !== null) break;
+    }
   }
 
   // 消費税額の抽出
@@ -371,13 +491,27 @@ function parseReceiptText(rawText: string): OcrResult {
   // より高度な実装では、商品名と金額のペアをより正確に抽出する必要があります
   const itemPattern = /([^¥￥\d]+)\s*[¥￥]?(\d{1,3}(?:[,，]\d{3})*)/;
 
+  // 除外キーワード（これらを含む行は品目として扱わない）
+  const excludePatterns =
+    /合計|小計|お会計|計|消費税|税額|外税|内税|お釣|点数|レジ|Tel|電話|住所|県|市|区|町|村|対象|軽減|rate|tax/i;
+
   for (const line of lines) {
+    // 除外パターンにマッチする行はスキップ
+    if (excludePatterns.test(line)) {
+      continue;
+    }
+
     const match = line.match(itemPattern);
-    if (match && !line.match(/合計|小計|お会計|計|消費税|税額/i)) {
+    if (match) {
       const name = match[1].trim();
       const price = parseInt(match[2].replace(/[,，]/g, ''), 10);
 
-      if (name.length > 0 && price > 0) {
+      // 品目名が短すぎる、または記号のみの場合はスキップ
+      const hasValidName =
+        name.length > 0 &&
+        /[a-zA-Z\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(name);
+
+      if (hasValidName && price > 0 && price < 1000000) {
         items.push({
           name,
           price,
