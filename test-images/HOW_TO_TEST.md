@@ -7,6 +7,7 @@
    - Androidのカメラで撮影（JPG形式）
 
 2. **このディレクトリに画像を配置**
+
    ```bash
    # 例: AirDropやUSBケーブルで転送
    # test-images/my-receipt.jpg
@@ -22,16 +23,17 @@
 レシート画像がない場合、テキストのスクリーンショットでもテストできます：
 
 1. メモ帳やテキストエディタで以下のような内容を入力:
+
    ```
    ABC Store
    123 Main Street
-   
+
    Coffee         $3.50
    Sandwich       $7.99
    Cookie         $2.00
-   
+
    Total         $13.49
-   
+
    2024-01-09 14:30
    ```
 
@@ -53,16 +55,19 @@ npx tsx scripts/test-ocr.ts https://example.com/receipt.jpg
 ## トラブルシューティング
 
 ### エラー: "Bad image data"
+
 - 画像ファイルが破損している
 - PDFが処理できない形式
-→ JPGまたはPNG形式の画像を使用してください
+  → JPGまたはPNG形式の画像を使用してください
 
 ### エラー: "No text detected"
+
 - 画像にテキストが含まれていない
 - 画像が不鮮明すぎる
-→ より鮮明な画像を使用してください
+  → より鮮明な画像を使用してください
 
 ### 成功例
+
 正しく動作すると、以下のように表示されます:
 
 ```

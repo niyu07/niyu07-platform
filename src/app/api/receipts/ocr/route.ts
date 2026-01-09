@@ -12,8 +12,17 @@ import { incrementUsage, getUsage } from '@/lib/api-usage';
  * - ドキュメント: PDF
  */
 const SUPPORTED_IMAGE_FORMATS = [
-  'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp',
-  'tiff', 'tif', 'heic', 'heif', 'pdf'
+  'jpg',
+  'jpeg',
+  'png',
+  'gif',
+  'bmp',
+  'webp',
+  'tiff',
+  'tif',
+  'heic',
+  'heif',
+  'pdf',
 ];
 
 /**
@@ -97,10 +106,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!receipt) {
-      return NextResponse.json(
-        { error: 'Receipt not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Receipt not found' }, { status: 404 });
     }
 
     if (receipt.userId !== user.id) {
@@ -132,17 +138,23 @@ export async function POST(request: NextRequest) {
 
     try {
       // Google Cloud Vision APIでOCR処理を実行
-      console.log('[POST /api/receipts/ocr] Performing OCR on image:', imageUrl);
+      console.log(
+        '[POST /api/receipts/ocr] Performing OCR on image:',
+        imageUrl
+      );
 
       // ファイル形式を判定
       const fileExt = getFileExtension(imageUrl);
-      console.log('[POST /api/receipts/ocr] File format:', fileExt.toUpperCase());
+      console.log(
+        '[POST /api/receipts/ocr] File format:',
+        fileExt.toUpperCase()
+      );
 
       // サポートされている形式かチェック
       if (!SUPPORTED_IMAGE_FORMATS.includes(fileExt)) {
         throw new Error(
           `Unsupported file format: ${fileExt}. ` +
-          `Supported formats: ${SUPPORTED_IMAGE_FORMATS.join(', ').toUpperCase()}`
+            `Supported formats: ${SUPPORTED_IMAGE_FORMATS.join(', ').toUpperCase()}`
         );
       }
 
@@ -172,7 +184,9 @@ export async function POST(request: NextRequest) {
       let result;
       if (isPdfFormat(fileExt)) {
         // PDFの場合は専用のAPI呼び出し
-        console.log('[POST /api/receipts/ocr] Using document text detection for PDF...');
+        console.log(
+          '[POST /api/receipts/ocr] Using document text detection for PDF...'
+        );
         [result] = await visionClient.documentTextDetection({
           image: { content: imageContent },
         });
@@ -222,7 +236,10 @@ export async function POST(request: NextRequest) {
         data: { status: 'completed' },
       });
 
-      console.log('[POST /api/receipts/ocr] OCR processing completed:', ocrData.id);
+      console.log(
+        '[POST /api/receipts/ocr] OCR processing completed:',
+        ocrData.id
+      );
 
       return NextResponse.json(
         {
@@ -238,7 +255,10 @@ export async function POST(request: NextRequest) {
         data: { status: 'failed' },
       });
 
-      console.error('[POST /api/receipts/ocr] OCR processing failed:', ocrError);
+      console.error(
+        '[POST /api/receipts/ocr] OCR processing failed:',
+        ocrError
+      );
       throw ocrError;
     }
   } catch (error) {
@@ -427,10 +447,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!receipt) {
-      return NextResponse.json(
-        { error: 'Receipt not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Receipt not found' }, { status: 404 });
     }
 
     if (receipt.userId !== user.id) {

@@ -29,7 +29,7 @@ interface ReceiptOcrUploaderProps {
 export default function ReceiptOcrUploader({
   onOcrSuccess,
 }: ReceiptOcrUploaderProps) {
-  const { data: session } = useSession();
+  useSession(); // Authentication check
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [ocrResult, setOcrResult] = useState<OcrResult | null>(null);
@@ -90,9 +90,7 @@ export default function ReceiptOcrUploader({
 
       if (!uploadResponse.ok) {
         const uploadError = await uploadResponse.json();
-        throw new Error(
-          uploadError.message || 'アップロードに失敗しました'
-        );
+        throw new Error(uploadError.message || 'アップロードに失敗しました');
       }
 
       const uploadData = await uploadResponse.json();
@@ -191,7 +189,9 @@ export default function ReceiptOcrUploader({
         <button
           type="button"
           onClick={handleButtonClick}
-          disabled={isUploading || isProcessing || (usage ? !usage.canUseOcr : false)}
+          disabled={
+            isUploading || isProcessing || (usage ? !usage.canUseOcr : false)
+          }
           className="w-full px-6 py-4 bg-linear-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isUploading ? (
@@ -295,7 +295,10 @@ export default function ReceiptOcrUploader({
               <span className="text-sm text-gray-600">品目:</span>
               <ul className="mt-1 space-y-1">
                 {ocrResult.items.slice(0, 5).map((item, index) => (
-                  <li key={index} className="text-sm text-gray-900 flex justify-between">
+                  <li
+                    key={index}
+                    className="text-sm text-gray-900 flex justify-between"
+                  >
                     <span>{item.name}</span>
                     {item.price && <span>¥{item.price.toLocaleString()}</span>}
                   </li>

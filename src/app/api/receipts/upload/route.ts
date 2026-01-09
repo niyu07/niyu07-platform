@@ -35,10 +35,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File | null;
 
     if (!file) {
-      return NextResponse.json(
-        { error: 'File is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'File is required' }, { status: 400 });
     }
 
     console.log('[POST /api/receipts/upload] Uploading file:', file.name);
@@ -131,10 +128,7 @@ export async function DELETE(request: NextRequest) {
     });
 
     if (!receipt) {
-      return NextResponse.json(
-        { error: 'Receipt not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Receipt not found' }, { status: 404 });
     }
 
     // ユーザーの所有権を確認
@@ -170,7 +164,7 @@ export async function DELETE(request: NextRequest) {
  * ユーザーのレシート一覧を取得
  * GET /api/receipts/upload
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // 認証チェック
     const session = await getServerSession(authOptions);

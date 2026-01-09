@@ -7,17 +7,20 @@
 ## ✅ 実装済み機能
 
 ### 1. **データベーススキーマ**
+
 - ✅ `receipts` テーブル（レシート画像とメタデータ）
 - ✅ `receipt_ocr_data` テーブル（OCR結果の構造化データ）
 - ✅ `api_usage_logs` テーブル（API使用量の追跡）
 
 ### 2. **API使用量管理システム**
+
 - ✅ 月間使用量の自動追跡
 - ✅ 上限チェック（デフォルト: 900回/月）
 - ✅ 超過時の自動ブロック
 - ✅ ユーザーごとの使用状況表示
 
 ### 3. **APIエンドポイント**
+
 - ✅ `POST /api/receipts/upload` - レシート画像アップロード
 - ✅ `GET /api/receipts/upload` - レシート一覧取得
 - ✅ `DELETE /api/receipts/upload` - レシート削除
@@ -25,6 +28,7 @@
 - ✅ `GET /api/receipts/ocr` - OCR結果取得
 
 ### 4. **フロントエンドコンポーネント**
+
 - ✅ `ReceiptOcrUploader` - レシート撮影・OCR処理UI
 - ✅ 使用状況プログレスバー
 - ✅ OCR結果の視覚的表示
@@ -40,6 +44,7 @@
 **重要**: 課金を有効化しても、無料枠内（月1,000回）なら料金は発生しません。
 
 1. 以下のURLにアクセス:
+
    ```
    https://console.developers.google.com/billing/enable?project=871871079618
    ```
@@ -51,6 +56,7 @@
 #### 1-2. Cloud Vision APIを有効化
 
 1. 課金有効化後、以下のURLにアクセス:
+
    ```
    https://console.cloud.google.com/apis/library/vision.googleapis.com?project=niyu07-platform-ocr
    ```
@@ -100,6 +106,7 @@ HEIC形式は自動変換を試みますが、環境によっては失敗する�
 - 実際のレシート画像（スマホで撮影したもの）を使用してテストすることを推奨します
 
 成功すると以下のように表示されます:
+
 ```
 ✅ テスト成功！Google Cloud Vision APIは正常に動作しています。
 ```
@@ -119,7 +126,7 @@ import ReceiptOcrUploader from './components/ReceiptOcrUploader';
     setAmount(ocrData.totalAmount?.toString() || '');
     setDate(ocrData.transactionDate || new Date().toISOString().split('T')[0]);
   }}
-/>
+/>;
 ```
 
 ---
@@ -127,14 +134,17 @@ import ReceiptOcrUploader from './components/ReceiptOcrUploader';
 ## 💰 料金について
 
 ### 無料枠
+
 - **月1,000ユニット（1,000回）まで完全無料**
 - レシートOCR 1回 = 1ユニット
 
 ### 有料（無料枠超過時）
+
 - 1,001〜5,000,000ユニット: $1.50/1,000ユニット
 - 参考: [Google Cloud Vision API 料金](https://cloud.google.com/vision/pricing)
 
 ### アプリ側の制限
+
 - **月間上限: 900回**（安全マージン100回）
 - 上限に達すると自動的にOCR処理をブロック
 - 翌月1日に自動リセット
@@ -146,6 +156,7 @@ import ReceiptOcrUploader from './components/ReceiptOcrUploader';
 ### データベースで追跡
 
 `api_usage_logs` テーブルで以下を管理:
+
 - ユーザーごとの使用回数
 - 月ごとの集計
 - 使用上限の設定
@@ -208,6 +219,7 @@ await updateUsageLimit(userId, 'vision', 800);
 **原因**: Cloud Vision APIが有効化されていない、または課金が無効
 
 **解決策**:
+
 1. 課金を有効化: https://console.developers.google.com/billing/enable?project=871871079618
 2. APIを有効化: https://console.cloud.google.com/apis/library/vision.googleapis.com
 
@@ -216,6 +228,7 @@ await updateUsageLimit(userId, 'vision', 800);
 **原因**: 月間上限（900回）に達した
 
 **解決策**:
+
 - 翌月まで待つ、または
 - 管理者が上限を引き上げる（データベースで変更可能）
 
@@ -224,6 +237,7 @@ await updateUsageLimit(userId, 'vision', 800);
 **原因**: 画像が不鮮明、またはテキストが含まれていない
 
 **解決策**:
+
 - 明るい場所で撮影
 - レシート全体が写るように撮影
 - ピントを合わせる
@@ -233,19 +247,23 @@ await updateUsageLimit(userId, 'vision', 800);
 ## 📈 今後の拡張案
 
 ### 1. **OCR精度の向上**
+
 - AI/MLモデルによる後処理
 - 日本語特化の正規表現改善
 - 店舗名データベースとのマッチング
 
 ### 2. **自動仕訳機能**
+
 - OCR結果から自動でカテゴリ分類
 - 過去の取引履歴から学習
 
 ### 3. **バッチ処理**
+
 - 複数レシートの一括アップロード
 - バックグラウンドでOCR処理
 
 ### 4. **Google Cloudのクォータ管理**
+
 - Google Cloud Consoleでの1日あたりの上限設定
 - アラート通知の設定
 
@@ -254,21 +272,26 @@ await updateUsageLimit(userId, 'vision', 800);
 ## 📚 関連ファイル
 
 ### データベース
+
 - `prisma/schema.prisma` - スキーマ定義
 - `prisma/migrations/20260108040441_add_api_usage_logs/` - マイグレーション
 
 ### バックエンド
+
 - `src/lib/api-usage.ts` - 使用量管理ユーティリティ
 - `src/app/api/receipts/upload/route.ts` - レシートアップロードAPI
 - `src/app/api/receipts/ocr/route.ts` - OCR処理API
 
 ### フロントエンド
+
 - `src/app/accounting/components/ReceiptOcrUploader.tsx` - OCR UIコンポーネント
 
 ### テスト
+
 - `scripts/test-ocr.ts` - OCRテストスクリプト
 
 ### ドキュメント
+
 - `docs/RECEIPT_OCR_SETUP.md` - 初期設定ドキュメント
 - `docs/OCR_SETUP_GUIDE.md` - このファイル
 
@@ -318,10 +341,12 @@ await updateUsageLimit(userId, 'vision', 800);
 ## 🔐 セキュリティ
 
 ### 認証情報の管理
+
 - `credentials/google-cloud-key.json` は `.gitignore` に追加済み
 - 環境変数 `GOOGLE_APPLICATION_CREDENTIALS` で参照
 
 ### アクセス制御
+
 - すべてのAPIエンドポイントで認証チェック
 - ユーザーは自分のレシートのみアクセス可能
 - 所有権チェックを実施
@@ -331,6 +356,7 @@ await updateUsageLimit(userId, 'vision', 800);
 ## 📞 サポート
 
 問題が発生した場合:
+
 1. `scripts/test-ocr.ts` でAPI接続をテスト
 2. ブラウザのコンソールでエラーを確認
 3. サーバーログを確認（`console.log` の出力）
