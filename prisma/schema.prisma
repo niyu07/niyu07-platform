@@ -42,6 +42,12 @@ model User {
   habits           Habit[]
   habitCompletions HabitCompletion[]
 
+  // レシート管理
+  receipts Receipt[]
+
+  // API使用量管理
+  apiUsageLogs ApiUsageLog[]
+
   @@map("users")
 }
 
@@ -409,4 +415,67 @@ model HabitCompletion {
   @@index([userId, date])
   @@index([habitId])
   @@map("habit_completions")
+}
+
+// ========================================
+// レシート管理・OCR
+// ========================================
+
+// レシート画像とメタデータ
+model Receipt {
+  id         String   @id @default(cuid())
+  userId     String
+  imageUrl   String // Supabase Storage または Cloud Storage のURL
+  uploadedAt DateTime @default(now())
+  status     String   @default("pending") // 'pending' | 'processing' | 'completed' | 'failed'
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ocrData ReceiptOcrData?
+
+  @@index([userId, uploadedAt])
+  @@index([userId, status])
+  @@map("receipts")
+}
+
+// OCR結果（構造化データ）
+model ReceiptOcrData {
+  id              String    @id @default(cuid())
+  receiptId       String    @unique
+  storeName       String? // 店舗名
+  transactionDate DateTime? @db.Date // 取引日
+  totalAmount     Int? // 合計金額（円）
+  taxAmount       Int? // 消費税額（円）
+  paymentMethod   String? // 支払い方法
+  items           Json      @default("[]") // 品目リスト（JSON配列）
+  rawText         String?   @db.Text // OCRで抽出された全テキスト
+  confidence      Float? // 信頼度スコア (0.0 - 1.0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  receipt Receipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+
+  @@index([receiptId])
+  @@index([transactionDate])
+  @@map("receipt_ocr_data")
+}
+
+// API使用量ログ（Google Cloud API等の無料枠管理用）
+model ApiUsageLog {
+  id        String   @id @default(cuid())
+  userId    String
+  apiType   String // 'vision' | 'calendar' | 'tasks' | 'gmail' など
+  month     String // 'YYYY-MM' 形式（例: '2026-01'）
+  count     Int      @default(0) // 当月の使用回数
+  limit     Int      @default(900) // 月間上限（安全マージン込み）
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, apiType, month])
+  @@index([userId, month])
+  @@index([userId, apiType])
+  @@map("api_usage_logs")
 }
