@@ -114,13 +114,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // API使用量チェック
-    const usage = await getUsage(user.id, 'vision');
+    // API使用量チェック（統合管理）
+    const usage = await getUsage(user.id);
     if (usage.isOverLimit) {
       return NextResponse.json(
         {
           error: 'API usage limit exceeded',
-          message: `月間OCR処理上限（${usage.limit}回）に達しました。来月まで利用できません。`,
+          message: `Google API使用量が月間上限（${usage.limit}回）に達しました。来月まで利用できません。`,
           usage: {
             count: usage.count,
             limit: usage.limit,

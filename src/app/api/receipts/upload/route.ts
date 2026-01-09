@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // OCR使用可能回数を事前チェック
-    const usage = await getUsage(user.id, 'vision');
+    // Google API使用可能回数を事前チェック（統合管理）
+    const usage = await getUsage(user.id);
 
     // FormDataからファイルを取得
     const formData = await request.formData();
@@ -193,8 +193,8 @@ export async function GET(_request: NextRequest) {
       },
     });
 
-    // OCR使用状況も取得
-    const usage = await getUsage(user.id, 'vision');
+    // Google API使用状況も取得（統合管理）
+    const usage = await getUsage(user.id);
 
     return NextResponse.json({
       success: true,
