@@ -3,6 +3,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
+import {
+  inferCategory,
+  calculateInferenceConfidence,
+} from '@/lib/category-inference';
 
 /**
  * レシートOCRアップローダーコンポーネント
@@ -30,6 +34,8 @@ interface OcrResult {
   items: Array<{ name: string; price?: number }>;
   rawText: string;
   confidence: number;
+  inferredCategory?: string | null;
+  categoryConfidence?: number;
 }
 
 interface OcrUsage {
@@ -42,19 +48,25 @@ interface OcrUsage {
 
 interface ReceiptOcrUploaderProps {
   onOcrSuccess?: (ocrData: OcrResult) => void;
+  onRegisterClick?: (editedData: OcrResult) => void;
 }
 
 export default function ReceiptOcrUploader({
   onOcrSuccess,
+  onRegisterClick,
 }: ReceiptOcrUploaderProps) {
   useSession(); // Authentication check
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [ocrResult, setOcrResult] = useState<OcrResult | null>(null);
+  const [editedResult, setEditedResult] = useState<OcrResult | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState<string>('');
   const [usage, setUsage] = useState<OcrUsage | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [lastUploadedFile, setLastUploadedFile] = useState<File | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
 
@@ -141,6 +153,8 @@ export default function ReceiptOcrUploader({
 
     setError('');
     setOcrResult(null);
+    setLastUploadedFile(file);
+    setRetryCount(0);
 
     try {
       // 1. 画像をアップロード
@@ -205,16 +219,39 @@ export default function ReceiptOcrUploader({
         confidence: ocrData.data.confidence,
       });
 
-      setOcrResult(ocrData.data);
+      // カテゴリを自動推測
+      const inferredCategory = inferCategory(
+        ocrData.data.storeName,
+        ocrData.data.items || []
+      );
+      const categoryConfidence = calculateInferenceConfidence(
+        ocrData.data.storeName,
+        ocrData.data.items || [],
+        inferredCategory
+      );
+
+      const enrichedData = {
+        ...ocrData.data,
+        inferredCategory,
+        categoryConfidence,
+      };
+
+      console.log('Category inference:', {
+        inferredCategory,
+        categoryConfidence,
+      });
+
+      setOcrResult(enrichedData);
+      setEditedResult(enrichedData);
       setIsProcessing(false);
 
       // 使用状況を再取得
       await fetchUsage();
 
       // 親コンポーネントにOCR結果を通知
-      console.log('Calling onOcrSuccess with data:', ocrData.data);
+      console.log('Calling onOcrSuccess with data:', enrichedData);
       if (onOcrSuccess) {
-        onOcrSuccess(ocrData.data);
+        onOcrSuccess(enrichedData);
         console.log('onOcrSuccess callback executed');
       } else {
         console.warn('onOcrSuccess callback is not defined');
@@ -273,10 +310,42 @@ export default function ReceiptOcrUploader({
   const handleClearPreview = () => {
     setPreviewUrl(null);
     setOcrResult(null);
+    setEditedResult(null);
+    setIsEditing(false);
     setError('');
+    setLastUploadedFile(null);
+    setRetryCount(0);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  const handleEditToggle = () => {
+    setIsEditing(!isEditing);
+  };
+
+  const handleFieldChange = (
+    field: keyof OcrResult,
+    value: string | number | null
+  ) => {
+    if (!editedResult) return;
+    setEditedResult({
+      ...editedResult,
+      [field]: value,
+    });
+  };
+
+  const handleRegister = () => {
+    if (!editedResult) return;
+    if (onRegisterClick) {
+      onRegisterClick(editedResult);
+    }
+  };
+
+  const handleRetry = async () => {
+    if (!lastUploadedFile) return;
+    setRetryCount((prev) => prev + 1);
+    await processFile(lastUploadedFile);
   };
 
   return (
@@ -451,69 +520,198 @@ export default function ReceiptOcrUploader({
 
       {/* エラー表示 */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-sm text-red-700">⚠️ {error}</p>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-3">
+          <div className="flex items-start gap-2">
+            <span className="text-red-600">⚠️</span>
+            <p className="text-sm text-red-700 flex-1">{error}</p>
+          </div>
+          {lastUploadedFile && retryCount < 3 && (
+            <button
+              type="button"
+              onClick={handleRetry}
+              className="w-full py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              <span>🔄</span>
+              <span>リトライ ({retryCount}/3)</span>
+            </button>
+          )}
+          {retryCount >= 3 && (
+            <p className="text-xs text-red-600">
+              リトライ回数が上限に達しました。画像を変更してお試しください。
+            </p>
+          )}
         </div>
       )}
 
-      {/* OCR結果表示 */}
-      {ocrResult && (
+      {/* OCR結果表示・編集 */}
+      {ocrResult && editedResult && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
-          <h3 className="font-medium text-green-900 flex items-center gap-2">
-            <span>✅</span>
-            <span>OCR処理完了</span>
-            <span className="text-xs text-green-600">
-              （信頼度: {Math.round(ocrResult.confidence * 100)}%）
-            </span>
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium text-green-900 flex items-center gap-2">
+              <span>✅</span>
+              <span>OCR処理完了</span>
+              <span className="text-xs text-green-600">
+                （信頼度: {Math.round(ocrResult.confidence * 100)}%）
+              </span>
+            </h3>
+            <button
+              type="button"
+              onClick={handleEditToggle}
+              className="text-sm px-3 py-1 rounded-md border border-green-300 hover:bg-green-100 transition-colors"
+            >
+              {isEditing ? '編集完了' : '編集する'}
+            </button>
+          </div>
+
+          {/* 信頼度が低い場合の警告 */}
+          {ocrResult.confidence < 0.5 && (
+            <div className="bg-yellow-50 border border-yellow-300 rounded-md p-3 flex items-start gap-2">
+              <span className="text-yellow-600">⚠️</span>
+              <div className="text-sm text-yellow-800">
+                <p className="font-medium">画像品質が低い可能性があります</p>
+                <p className="text-xs mt-1">
+                  レシート全体が鮮明に写った画像で再度お試しください
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* カテゴリ推測結果 */}
+          {editedResult.inferredCategory && (
+            <div className="bg-blue-50 border border-blue-300 rounded-md p-3 flex items-start gap-2">
+              <span className="text-blue-600">🏷️</span>
+              <div className="text-sm text-blue-800 flex-1">
+                <p className="font-medium">
+                  カテゴリを推測しました: {editedResult.inferredCategory}
+                </p>
+                <p className="text-xs mt-1">
+                  信頼度:{' '}
+                  {Math.round((editedResult.categoryConfidence || 0) * 100)}%
+                  {(editedResult.categoryConfidence || 0) < 0.5 &&
+                    ' - 確認をお勧めします'}
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-            {ocrResult.storeName && (
-              <div>
-                <span className="text-gray-600">店舗名:</span>
+            {/* 店舗名 */}
+            <div>
+              <label className="text-gray-600 block mb-1">店舗名:</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editedResult.storeName || ''}
+                  onChange={(e) =>
+                    handleFieldChange('storeName', e.target.value || null)
+                  }
+                  className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              ) : (
                 <p className="font-medium text-gray-900">
-                  {ocrResult.storeName}
+                  {editedResult.storeName || '未検出'}
                 </p>
-              </div>
-            )}
+              )}
+            </div>
 
-            {ocrResult.transactionDate && (
-              <div>
-                <span className="text-gray-600">日付:</span>
+            {/* 日付 */}
+            <div>
+              <label className="text-gray-600 block mb-1">日付:</label>
+              {isEditing ? (
+                <input
+                  type="date"
+                  value={
+                    editedResult.transactionDate
+                      ? new Date(editedResult.transactionDate)
+                          .toISOString()
+                          .split('T')[0]
+                      : ''
+                  }
+                  onChange={(e) =>
+                    handleFieldChange('transactionDate', e.target.value || null)
+                  }
+                  className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              ) : (
                 <p className="font-medium text-gray-900">
-                  {new Date(ocrResult.transactionDate).toLocaleDateString(
-                    'ja-JP'
-                  )}
+                  {editedResult.transactionDate
+                    ? new Date(editedResult.transactionDate).toLocaleDateString(
+                        'ja-JP'
+                      )
+                    : '未検出'}
                 </p>
-              </div>
-            )}
+              )}
+            </div>
 
-            {ocrResult.totalAmount !== null && (
-              <div>
-                <span className="text-gray-600">合計金額:</span>
+            {/* 合計金額 */}
+            <div>
+              <label className="text-gray-600 block mb-1">合計金額:</label>
+              {isEditing ? (
+                <input
+                  type="number"
+                  value={editedResult.totalAmount || ''}
+                  onChange={(e) =>
+                    handleFieldChange(
+                      'totalAmount',
+                      e.target.value ? Number(e.target.value) : null
+                    )
+                  }
+                  className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="金額を入力"
+                />
+              ) : (
                 <p className="font-medium text-gray-900">
-                  ¥{ocrResult.totalAmount.toLocaleString()}
+                  {editedResult.totalAmount !== null
+                    ? `¥${editedResult.totalAmount.toLocaleString()}`
+                    : '未検出'}
                 </p>
-              </div>
-            )}
+              )}
+            </div>
 
-            {ocrResult.taxAmount !== null && (
-              <div>
-                <span className="text-gray-600">消費税:</span>
+            {/* 消費税 */}
+            <div>
+              <label className="text-gray-600 block mb-1">消費税:</label>
+              {isEditing ? (
+                <input
+                  type="number"
+                  value={editedResult.taxAmount || ''}
+                  onChange={(e) =>
+                    handleFieldChange(
+                      'taxAmount',
+                      e.target.value ? Number(e.target.value) : null
+                    )
+                  }
+                  className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="消費税を入力"
+                />
+              ) : (
                 <p className="font-medium text-gray-900">
-                  ¥{ocrResult.taxAmount.toLocaleString()}
+                  {editedResult.taxAmount !== null
+                    ? `¥${editedResult.taxAmount.toLocaleString()}`
+                    : '未検出'}
                 </p>
-              </div>
-            )}
+              )}
+            </div>
 
-            {ocrResult.paymentMethod && (
-              <div>
-                <span className="text-gray-600">支払い方法:</span>
+            {/* 支払い方法 */}
+            <div className="sm:col-span-2">
+              <label className="text-gray-600 block mb-1">支払い方法:</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editedResult.paymentMethod || ''}
+                  onChange={(e) =>
+                    handleFieldChange('paymentMethod', e.target.value || null)
+                  }
+                  className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="現金、クレジットカード等"
+                />
+              ) : (
                 <p className="font-medium text-gray-900">
-                  {ocrResult.paymentMethod}
+                  {editedResult.paymentMethod || '未検出'}
                 </p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {ocrResult.items.length > 0 && (
@@ -546,6 +744,18 @@ export default function ReceiptOcrUploader({
               {ocrResult.rawText}
             </pre>
           </details>
+
+          {/* この内容で登録ボタン */}
+          {onRegisterClick && (
+            <button
+              type="button"
+              onClick={handleRegister}
+              className="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md"
+            >
+              <span>✓</span>
+              <span>この内容で登録</span>
+            </button>
+          )}
         </div>
       )}
     </div>
