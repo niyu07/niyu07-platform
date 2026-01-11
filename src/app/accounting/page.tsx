@@ -9,11 +9,13 @@ import TaxSimulator from './components/TaxSimulator';
 import Reports from './components/Reports';
 import TaxFiling from './components/TaxFiling';
 import Settings from './components/Settings';
+import ReceiptList from './components/ReceiptList';
 
 type TabType =
   | 'ダッシュボード'
   | '取引入力'
   | '取引一覧'
+  | '領収書管理'
   | '扶養シミュレーター'
   | 'レポート'
   | '確定申告'
@@ -32,6 +34,7 @@ export default function AccountingPage() {
     'ダッシュボード',
     '取引入力',
     '取引一覧',
+    '領収書管理',
     '扶養シミュレーター',
     'レポート',
     '確定申告',
@@ -87,6 +90,8 @@ export default function AccountingPage() {
         return (
           <TransactionList key={refreshKey} onEdit={handleEditTransaction} />
         );
+      case '領収書管理':
+        return <ReceiptList key={refreshKey} />;
       case '扶養シミュレーター':
         return <TaxSimulator />;
       case 'レポート':
