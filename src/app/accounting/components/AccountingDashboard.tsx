@@ -213,7 +213,7 @@ export default function AccountingDashboard({
       </div>
 
       {/* アクションボタン */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <button
           onClick={() => onNavigateToInput('取引入力', '収入')}
           className="border-2 border-dashed border-green-300 bg-green-50 hover:bg-green-100 rounded-xl p-6 text-center transition-colors"
@@ -227,6 +227,13 @@ export default function AccountingDashboard({
         >
           <span className="text-2xl mb-2 block">+</span>
           <span className="text-red-700 font-medium">経費を追加</span>
+        </button>
+        <button
+          onClick={() => (window.location.href = '/accounting/ocr-usage')}
+          className="border-2 border-dashed border-blue-300 bg-blue-50 hover:bg-blue-100 rounded-xl p-6 text-center transition-colors"
+        >
+          <span className="text-2xl mb-2 block">👁️</span>
+          <span className="text-blue-700 font-medium">OCR使用状況を見る</span>
         </button>
       </div>
 

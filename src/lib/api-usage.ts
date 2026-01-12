@@ -218,3 +218,26 @@ export async function resetUsage(
     });
   }
 }
+
+/**
+ * 使用上限を更新
+ * @param userId ユーザーID
+ * @param newLimit 新しい上限値
+ */
+export async function updateUsageLimit(
+  userId: string,
+  newLimit: number
+): Promise<void> {
+  const month = getCurrentMonth();
+
+  // 当月の全てのAPIタイプの使用量レコードの上限を更新
+  await prisma.apiUsageLog.updateMany({
+    where: {
+      userId,
+      month,
+    },
+    data: {
+      limit: newLimit,
+    },
+  });
+}
