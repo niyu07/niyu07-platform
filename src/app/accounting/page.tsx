@@ -10,6 +10,7 @@ import Reports from './components/Reports';
 import TaxFiling from './components/TaxFiling';
 import Settings from './components/Settings';
 import ReceiptList from './components/ReceiptList';
+import YearlyExport from './components/YearlyExport';
 
 type TabType =
   | 'ダッシュボード'
@@ -19,6 +20,7 @@ type TabType =
   | '扶養シミュレーター'
   | 'レポート'
   | '確定申告'
+  | '年次エクスポート'
   | '設定';
 
 export default function AccountingPage() {
@@ -38,6 +40,7 @@ export default function AccountingPage() {
     '扶養シミュレーター',
     'レポート',
     '確定申告',
+    '年次エクスポート',
     '設定',
   ];
 
@@ -98,6 +101,8 @@ export default function AccountingPage() {
         return <Reports />;
       case '確定申告':
         return <TaxFiling />;
+      case '年次エクスポート':
+        return <YearlyExport key={refreshKey} />;
       case '設定':
         return <Settings />;
       default:
