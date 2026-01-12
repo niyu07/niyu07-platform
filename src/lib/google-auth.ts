@@ -48,9 +48,15 @@ export async function checkGoogleAuthStatus(userId: string) {
       hasRefreshToken: true,
       message: 'Google認証は有効です',
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     // invalid_grantエラーの場合は無効なトークン
-    if (error?.message?.includes('invalid_grant') || error?.code === 400) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorCode =
+      error && typeof error === 'object' && 'code' in error
+        ? error.code
+        : undefined;
+
+    if (errorMessage.includes('invalid_grant') || errorCode === 400) {
       return {
         isAuthenticated: false,
         hasRefreshToken: true,
@@ -63,7 +69,7 @@ export async function checkGoogleAuthStatus(userId: string) {
       isAuthenticated: false,
       hasRefreshToken: true,
       message: 'トークンの検証中にエラーが発生しました',
-      error: error?.message,
+      error: errorMessage,
     };
   }
 }

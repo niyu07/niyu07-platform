@@ -58,12 +58,20 @@ async function getTasksClient(userId: string) {
         },
       });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ トークンリフレッシュエラー:', error);
 
     // invalid_grantエラーの場合は、アカウントのトークンを削除
-    if (error?.message?.includes('invalid_grant') || error?.code === 400) {
-      console.log('⚠️ リフレッシュトークンが無効です。アカウント情報をクリアします。');
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorCode =
+      error && typeof error === 'object' && 'code' in error
+        ? error.code
+        : undefined;
+
+    if (errorMessage.includes('invalid_grant') || errorCode === 400) {
+      console.log(
+        '⚠️ リフレッシュトークンが無効です。アカウント情報をクリアします。'
+      );
       await prisma.account.delete({
         where: { id: account.id },
       });

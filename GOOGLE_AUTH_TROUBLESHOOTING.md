@@ -9,12 +9,14 @@
 ### 1. `invalid_grant` エラー
 
 **原因:**
+
 - リフレッシュトークンの有効期限切れ（6ヶ月間使用されなかった場合）
 - ユーザーがGoogle側でアプリのアクセス権を取り消した
 - パスワード変更やセキュリティイベントによるトークンの無効化
 - OAuth認証フローの途中でタイムアウトが発生
 
 **症状:**
+
 ```
 ❌ トークンリフレッシュエラー: Error: invalid_grant
 ```
@@ -22,10 +24,12 @@
 ### 2. OAuth Callback Timeout
 
 **原因:**
+
 - デフォルトのHTTPタイムアウト（3500ms）が短すぎる
 - ネットワークの遅延
 
 **症状:**
+
 ```
 [next-auth][error][OAUTH_CALLBACK_ERROR]
 outgoing request timed out after 3500ms
