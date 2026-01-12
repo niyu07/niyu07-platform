@@ -31,16 +31,20 @@ export async function getCalendarClient(userId: string) {
   // トークンの自動更新を設定
   oauth2Client.on('tokens', async (tokens) => {
     console.log('🔄 Refreshing Google tokens...');
-    await prisma.account.update({
-      where: { id: account.id },
-      data: {
-        access_token: tokens.access_token ?? account.access_token,
-        refresh_token: tokens.refresh_token ?? account.refresh_token,
-        expires_at: tokens.expiry_date
-          ? Math.floor(tokens.expiry_date / 1000)
-          : account.expires_at,
-      },
-    });
+    try {
+      await prisma.account.update({
+        where: { id: account.id },
+        data: {
+          access_token: tokens.access_token ?? account.access_token,
+          refresh_token: tokens.refresh_token ?? account.refresh_token,
+          expires_at: tokens.expiry_date
+            ? Math.floor(tokens.expiry_date / 1000)
+            : account.expires_at,
+        },
+      });
+    } catch (updateError) {
+      console.error('❌ トークン更新の保存エラー:', updateError);
+    }
   });
 
   // トークンが期限切れの場合は事前にリフレッシュ
@@ -54,8 +58,28 @@ export async function getCalendarClient(userId: string) {
         },
       });
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('❌ トークンリフレッシュエラー:', error);
+
+    // invalid_grantエラーの場合は、アカウントのトークンを削除
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorCode =
+      error && typeof error === 'object' && 'code' in error
+        ? error.code
+        : undefined;
+
+    if (errorMessage.includes('invalid_grant') || errorCode === 400) {
+      console.log(
+        '⚠️ リフレッシュトークンが無効です。アカウント情報をクリアします。'
+      );
+      await prisma.account.delete({
+        where: { id: account.id },
+      });
+      throw new Error(
+        'Google認証トークンが無効になりました。再度ログインしてください。'
+      );
+    }
+
     throw new Error(
       'Google認証トークンの更新に失敗しました。再度ログインしてください。'
     );
@@ -119,7 +143,17 @@ export async function getCalendarList(userId: string) {
 
     const response = await calendar.calendarList.list();
 
-    return response.data.items || [];
+    const calendars = response.data.items || [];
+
+    console.log(`📅 取得したカレンダー数: ${calendars.length}`);
+    calendars.forEach((cal) => {
+      console.log(`  - ${cal.summary} (${cal.id})`);
+      console.log(
+        `    プライマリ: ${cal.primary}, アクセス権: ${cal.accessRole}`
+      );
+    });
+
+    return calendars;
   } catch (error) {
     console.error('❌ カレンダーリスト取得エラー:', error);
     throw error;
@@ -192,6 +226,12 @@ export async function getEventsFromMultipleCalendars(
   try {
     const calendar = await getCalendarClient(userId);
 
+    console.log(
+      `📅 ${calendarIds.length}個のカレンダーからイベントを取得中...`
+    );
+    console.log(`  対象カレンダーID: ${calendarIds.join(', ')}`);
+    console.log(`  期間: ${timeMin} ～ ${timeMax}`);
+
     // 各カレンダーからイベントを並列取得
     const promises = calendarIds.map((calendarId) =>
       calendar.events
@@ -203,7 +243,11 @@ export async function getEventsFromMultipleCalendars(
           orderBy: 'startTime',
           maxResults: 2500,
         })
-        .then((response) => response.data.items || [])
+        .then((response) => {
+          const items = response.data.items || [];
+          console.log(`  ✅ ${calendarId}: ${items.length}件のイベント`);
+          return items;
+        })
         .catch((error) => {
           console.error(`❌ カレンダー ${calendarId} からの取得エラー:`, error);
           return [];

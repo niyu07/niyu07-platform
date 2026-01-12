@@ -26,6 +26,10 @@ export const authOptions: NextAuthOptions = {
           prompt: 'consent',
         },
       },
+      // HTTPタイムアウトを延長（デフォルト3500ms -> 10000ms）
+      httpOptions: {
+        timeout: 10000,
+      },
     }),
   ],
   callbacks: {
@@ -50,4 +54,6 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'database',
   },
+  // デバッグモード（開発環境のみ）
+  debug: process.env.NODE_ENV === 'development',
 };
