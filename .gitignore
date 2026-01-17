@@ -59,3 +59,19 @@ coverage
 .docker
 
 /src/generated/prisma
+
+# test files
+test-images/
+test-data/
+*.test.jpg
+*.test.png
+*.test.pdf
+*.test.HEIC
+
+# build info
+tsconfig.tsbuildinfo
+
+# temporary files
+*.tmp
+*.temp
+.cache/

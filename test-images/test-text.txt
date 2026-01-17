@@ -1,5 +1,0 @@
-TEST RECEIPT
-Store: ABC Market
-Date: 2024-01-09
-Total: $49.99
-Thank You!
